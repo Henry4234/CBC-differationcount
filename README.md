@@ -1,5 +1,5 @@
 # CBC-differationcount
-# CBC計數程式架構
+
 # 1. 登入介面
 ![螢幕擷取畫面 2022-12-03 154438](https://user-images.githubusercontent.com/102476562/221456935-3b566723-6ad1-46a7-ba02-b01485901e61.png)
 
