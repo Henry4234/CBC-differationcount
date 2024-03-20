@@ -4,7 +4,6 @@ import subprocess
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import font
-from turtle import goto
 from typing import Sized
 import customtkinter  as ctk
 import verifyAccount
@@ -83,7 +82,7 @@ class Login:    #建立登入介面
         password = self.input_password.get()
         # idreturn(account)
         #對賬戶資訊進行驗證，普通使用者返回user，管理員返回master，賬戶錯誤返回noAccount，密碼錯誤返回noPassword  
-        verifyResult = verifyAccount.verifyAccountData(account,password)  
+        verifyResult = verifyAccount.verifyAccountData_sql(account,password)  
         if verifyResult=='master':  
             tk.messagebox.showinfo(title='土城醫院檢驗科', message='進入管理介面')
             self.input_account.delete(0,tk.END)

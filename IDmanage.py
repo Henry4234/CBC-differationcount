@@ -4,10 +4,19 @@ import tkinter as tk
 from tkinter import simpledialog
 from tkinter import messagebox
 import customtkinter as ctk
-import json
+import json,pyodbc
 from setuptools import Command
-from verifyAccount import changepw2,addaccount,delaccount,editaccount
+from verifyAccount import addaccount_sql,delaccount,editaccount,changepw_sql
 from PIL import Image
+
+
+connection_string = """DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=bloodtest;UID=sa;PWD=1234"""
+try:
+    coxn = pyodbc.connect(connection_string)
+except pyodbc.OperationalError:
+    connection_string = "DRIVER={ODBC Driver 17 for SQL Server};SERVER=10.30.47.9;DATABASE=bloodtest;UID=henry423;PWD=1234"
+finally:
+    coxn = pyodbc.connect(connection_string)
 
 class ID:
     
@@ -101,6 +110,15 @@ class ID:
                     width=120,height=120
                     )
         self.label_2.grid(row=0,column=0,columnspan=2,sticky='nsew')
+        self.label_branch = ctk.CTkLabel(
+                    self.labelframe_2, 
+                    text = "院區:", 
+                    fg_color='#FFEEDD',
+                    font=('微軟正黑體',20),
+                    text_color="#000000",
+                    width=140,height=40
+                    )
+        self.label_branch.grid(row=1,column=0,pady=10,sticky='e')
         self.label_ID = ctk.CTkLabel(
                     self.labelframe_2, 
                     text = "帳號:", 
@@ -109,7 +127,7 @@ class ID:
                     text_color="#000000",
                     width=140,height=40
                     )
-        self.label_ID.grid(row=1,column=0,pady=10,sticky='e')
+        self.label_ID.grid(row=2,column=0,pady=10,sticky='e')
         self.label_pw = ctk.CTkLabel(
                     self.labelframe_2, 
                     text = "密碼:", 
@@ -118,7 +136,7 @@ class ID:
                     text_color="#000000",
                     width=140,height=40
                     )
-        self.label_pw.grid(row=2,column=0,pady=10,sticky='e')
+        self.label_pw.grid(row=3,column=0,pady=10,sticky='e')
         self.label_pw2 = ctk.CTkLabel(
                     self.labelframe_2, 
                     text = "再次輸入密碼:", 
@@ -127,26 +145,36 @@ class ID:
                     text_color="#000000",
                     width=140,height=40
                     )
-        self.label_pw2.grid(row=3,column=0,pady=10,sticky='e')
+        self.label_pw2.grid(row=4,column=0,pady=10,sticky='e')
+        #(f2)院區滾動欄位
+        self.input_branch = ctk.CTkComboBox(
+                    self.labelframe_2, 
+                    values=["林口","土城","台北","基隆","大里仁愛"],
+                    # fg_color='#000000',
+                    button_color='#FF9900',
+                    width=120,height=40,
+                    # font=('微軟正黑體',16,)
+                    )
+        self.input_branch.grid(row=1,column=1,pady=10,sticky='w')
         #(f2)帳號輸入欄位
         self.input_ID = ctk.CTkEntry(
                     self.labelframe_2, 
                     width=120,height=40
                     )
-        self.input_ID.grid(row=1,column=1,pady=10,sticky='w')
+        self.input_ID.grid(row=2,column=1,pady=10,sticky='w')
         #(f2)密碼輸入欄位
         self.input_pw = ctk.CTkEntry(
                     self.labelframe_2, 
                     width=120,height=40,
                     show='*'
                     )
-        self.input_pw.grid(row=2,column=1,pady=10,sticky='w')
+        self.input_pw.grid(row=3,column=1,pady=10,sticky='w')
         self.input_pw2 = ctk.CTkEntry(
                     self.labelframe_2, 
                     width=120,height=40,
                     show='*'
                     )
-        self.input_pw2.grid(row=3,column=1,pady=10,sticky='w')
+        self.input_pw2.grid(row=4,column=1,pady=10,sticky='w')
         #(f2)確認/清除按鈕
         self.f2_okbtn = ctk.CTkButton(
             self.labelframe_2,
@@ -155,7 +183,7 @@ class ID:
             height=30,
             fg_color='#FF9900',
             text_color='#000000')
-        self.f2_okbtn.grid(row=4,column=0,padx=40,pady=15)
+        self.f2_okbtn.grid(row=5,column=0,padx=40,pady=15)
         self.f2_clrbtn = ctk.CTkButton(
             self.labelframe_2,
             text = "清除",
@@ -163,7 +191,7 @@ class ID:
             height=30,
             fg_color='#FF9900',
             text_color='#000000')
-        self.f2_clrbtn.grid(row=4,column=1,padx=40,pady=15)
+        self.f2_clrbtn.grid(row=5,column=1,padx=40,pady=15)
 ##(f2)新增帳號介面功能區
     #(f2)清除欄位功能
     def clear(self):
@@ -172,6 +200,7 @@ class ID:
         self.input_pw2.delete(0,tk.END)
     #(f2)新增帳號的功能鍵
     def addaccount(self):
+        branch = self.input_branch.get()
         account = self.input_ID.get()
         pw1 = self.input_pw.get()
         pw2 = self.input_pw2.get()
@@ -182,7 +211,7 @@ class ID:
             self.input_pw2.delete(0,tk.END)
             return None
         else:
-            result = addaccount(account,pw1)
+            result = addaccount_sql(branch,account,pw1)
         if result =="duplicate":
             tk.messagebox.showerror(title='土城醫院檢驗科', message='帳號重複!請重新輸入!')
             self.clear()
@@ -289,15 +318,19 @@ class ID:
             text_color='#000000')
         self.del_btn.grid(row=3,column=4,padx=40,sticky='n')
 ##(f3)修改帳號介面功能區    
-    #(f3)更新listbox(JSON裡面有的帳號)
+    #(f3)更新listbox(MSSQL裡面有的帳號)
     def updatelist(self):
-        jsonfile = open('in.json','rb')
-        a = json.load(jsonfile)
-        ml = a['member']
-        idlist = []
-        for i in ml:
-            x = i['ID']
-            idlist.append(x)
+        with coxn.cursor() as cursor:
+            query = "SELECT ac,pw  FROM [bloodtest].[dbo].[id];"
+            cursor.execute(query)
+            acpw = dict(cursor.fetchall())
+        # jsonfile = open('in.json','rb')
+        # a = json.load(jsonfile)
+        # ml = a['member']
+        idlist = [i for i in acpw.keys()]
+        # for i in ml:
+        #     x = i['ID']
+        #     idlist.append(x)
         self.id_listbox.delete(0,tk.END)
         for i in idlist:
             self.id_listbox.insert(tk.END, i)
@@ -338,12 +371,15 @@ class ID:
     def clicklabelpw(self,event):
         #toplevel裡的確認鍵
         def ok():
+            account = self.input_ID2.get()
             newpw = self.input_newpw.get()
             newpw2 = self.input_newpw2.get()
             if newpw == newpw2:
-                changeResult = changepw2(account=account,newpassword=newpw)
+                changeResult = changepw_sql(account=account,newpassword=newpw)
+                print(changeResult)
                 if changeResult == "success":
-                    tk.messagebox.showinfo(title='土城醫院檢驗科', message='修改成功!')    
+                    tk.messagebox.showinfo(title='土城醫院檢驗科', message='修改成功!')
+                    self.newWindow.destroy() 
             else:
                 tk.messagebox.showinfo(title='土城醫院檢驗科', message='新密碼不一致，請重新輸入!')
                 self.input_newpw.delete(0,tk.END)

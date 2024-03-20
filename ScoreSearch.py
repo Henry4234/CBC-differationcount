@@ -37,6 +37,7 @@ class Search:
 
     def __init__(self,master,oldmaster=None):  
         # 建立登入後視窗  
+        Baccount ="henry423"
         self.master = master
         super().__init__()
         self.master.protocol("WM_DELETE_WINDOW",lambda: self.exit(oldmaster))        
@@ -84,10 +85,10 @@ class Search:
         self.label_1.grid(row=0,column=0,padx=20, pady=20)
         self.label_2 = ctk.CTkLabel(
                     self.labelframe_1, 
-                    text = """歡迎!
-admin""", 
 #                     text = """歡迎!
-# %s"""%(Baccount), 
+# admin""", 
+                    text = """歡迎!
+%s"""%(Baccount), 
                     fg_color='#FFDCB9',
                     font=('微軟正黑體',22),
                     text_color="#4A4AFF",
@@ -178,15 +179,16 @@ admin""",
         fig1 = self.figure.add_subplot(1, 1, 1)  # 三個引數，依次是：行，列，當前索引
         fig1.set_title("應考次數", loc='center', pad=20, fontsize='xx-large', color='black')    #設定標題
         ##X軸範圍需要依據資料有所變化
-        oldest_month = db["timestamp"].head(1).astype("datetime64[M]")
-        latest_month = db["timestamp"].tail(1).astype("datetime64[M]")
+        oldest_month = db["timestamp"].head(1).astype("datetime64[D]")
+        latest_month = db["timestamp"].tail(1).astype("datetime64[D]")
         latest_month = latest_month + np.timedelta64(31,'D')
+        # print(oldest_month,latest_month)
         ##X軸設定
         fig1.set_xlabel("日期") #確定x坐標軸標題
         fig1.xaxis.set_major_formatter(mdates.DateFormatter("%y/%m/%d"))   #X軸刻度格式
         fig1.xaxis.set_major_locator(mdates.MonthLocator(interval=1))   #X軸主要刻度
         fig1.xaxis.set_minor_locator(mdates.WeekdayLocator(interval=1)) #X軸次要刻度
-        fig1.set_xlim(oldest_month,latest_month)    #設定X軸範圍
+        # fig1.set_xlim(oldest_month,latest_month)    #設定X軸範圍
         self.figure.autofmt_xdate() #讓X軸標籤好看一點
         ##Y軸設定
         fig1.set_ylabel("成績") #確定y坐標軸標題
