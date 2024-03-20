@@ -6,7 +6,7 @@ from tkinter import simpledialog
 from tkinter import messagebox
 import customtkinter as ctk
 import subprocess
-from verifyAccount import changepw
+from verifyAccount import changepw_sql
 from setuptools import Command
 
 # from verifyAccount import changepw
@@ -79,7 +79,7 @@ class Basedesk_Admin:
             bg_color="#FFEEDD")
         self.labelframe_4.pack()
         ##各類功能選單
-        self.button_1=ctk.CTkButton(
+        self.button_blood=ctk.CTkButton(
             self.labelframe_1, 
             command = self.bloodcounter, 
             text = "血液考核",
@@ -88,8 +88,8 @@ class Basedesk_Admin:
             font=('微軟正黑體',22),
             text_color="#000000",
             )
-        self.button_1.pack(padx=10, pady=15)
-        self.button_backup=ctk.CTkButton(
+        self.button_blood.pack(padx=10, pady=15)
+        self.button_urin=ctk.CTkButton(
             self.labelframe_1, 
             command = self.urinesedimentcounter, 
             text = "尿沉渣考核",
@@ -98,8 +98,8 @@ class Basedesk_Admin:
             font=('微軟正黑體',22),
             text_color="#000000",
             )
-        self.button_backup.pack(padx=10, pady=15)
-        self.button_1s=ctk.CTkButton(
+        self.button_urin.pack(padx=10, pady=15)
+        self.button_bodyfluid=ctk.CTkButton(
             self.labelframe_1, 
             command = self.bodyfluidcounter, 
             text = "體液考核",
@@ -108,18 +108,28 @@ class Basedesk_Admin:
             font=('微軟正黑體',22),
             text_color="#000000"
             )
-        self.button_1s.pack(padx=10, pady=15)
+        self.button_bodyfluid.pack(padx=10, pady=15)
+        self.button_practise=ctk.CTkButton(
+            self.labelframe_1, 
+            command = self.practise, 
+            text = "練習模式",
+            fg_color='#FF9900', 
+            width=160,height=40,
+            font=('微軟正黑體',22),
+            text_color="#000000"
+            )
+        self.button_practise.pack(padx=10, pady=15)
         self.button_2=ctk.CTkButton(
             self.labelframe_2, 
             command = self.scoresearch,
-            text = "成績查詢",
+            text = "個人成績查詢",
             fg_color='#FF9900', 
             width=160,height=40,
             font=('微軟正黑體',22),
             text_color="#000000",
             )
-        self.button_2.pack(padx=10, pady=15)
-        self.button_keyinclia=ctk.CTkButton(
+        # self.button_2.pack(padx=10, pady=15)
+        self.btn_allscore=ctk.CTkButton(
             self.labelframe_2, 
             command = None, 
             text = "全體成績查詢",
@@ -128,7 +138,7 @@ class Basedesk_Admin:
             font=('微軟正黑體',22),
             text_color="#000000"
             )
-        self.button_keyinclia.pack(padx=10, pady=15)
+        self.btn_allscore.pack(padx=10, pady=15)
         self.button_3=ctk.CTkButton(
             self.labelframe_3,
             command = self.scoreimport, 
@@ -142,7 +152,7 @@ class Basedesk_Admin:
         self.button_3m=ctk.CTkButton(
             self.labelframe_3,
             command = self.testmodify, 
-            text = "考題設定", 
+            text = "考題參數設定", 
             fg_color='#FF9900',
             width=160,height=40,
             font=('微軟正黑體',22),
@@ -150,7 +160,7 @@ class Basedesk_Admin:
             )
         self.button_3m.pack(padx=10, pady=15)
         self.button_3s=ctk.CTkButton(
-            self.labelframe_3,
+            self.labelframe_2,
             command = None, 
             text = "成績匯出", 
             fg_color='#FF9900',
@@ -159,6 +169,26 @@ class Basedesk_Admin:
             text_color="#000000"
             )
         self.button_3s.pack(padx=10, pady=15)
+        self.button_3t=ctk.CTkButton(
+            self.labelframe_2,
+            command = self.scorecal_test, 
+            text = "成績試算", 
+            fg_color='#FF9900',
+            width=160,height=40,
+            font=('微軟正黑體',22),
+            text_color="#000000"
+            )
+        self.button_3t.pack(padx=10, pady=15)
+        self.button_3t=ctk.CTkButton(
+            self.labelframe_2,
+            command = self.scorecal, 
+            text = "成績計算", 
+            fg_color='#FF9900',
+            width=160,height=40,
+            font=('微軟正黑體',22),
+            text_color="#000000"
+            )
+        self.button_3t.pack(padx=10, pady=15)
         self.button_4=ctk.CTkButton(
             self.labelframe_4,
             command = self.IDmanage, 
@@ -214,18 +244,13 @@ class Basedesk_Admin:
     # def gui_arrang(self):
         self.hellow_label.place(relx=0.5, rely=0.05, anchor=tk.CENTER)
         self.label_1.place(relx=0.5, rely=0.13, anchor=tk.CENTER)
-        # self.button_1.place(relx=0.2,rely=0.4,anchor=tk.CENTER)
-        # self.button_1s.place(relx=0.2,rely=0.55,anchor=tk.CENTER)
-        # self.button_2.place(relx=0.5,rely=0.4,anchor=tk.CENTER)
-        # self.button_2s.place(relx=0.5,rely=0.55,anchor=tk.CENTER)
-        # self.button_3.place(relx=0.8,rely=0.4,anchor=tk.CENTER)
         self.button_5.place(relx=0.2,rely=0.9,anchor=tk.CENTER)
         self.button_6.place(relx=0.5,rely=0.9,anchor=tk.CENTER)
         self.button_changepw.place(relx=0.8,rely=0.9,anchor=tk.CENTER)
         self.cc.place(relx=1, rely=1,anchor=tk.SE) 
-        self.labelframe_1.place(relx=0.17,rely=0.40, anchor=tk.CENTER)
-        self.labelframe_2.place(relx=0.52,rely=0.34, anchor=tk.CENTER)
-        self.labelframe_3.place(relx=0.85,rely=0.40, anchor=tk.CENTER)
+        self.labelframe_1.place(relx=0.17,rely=0.455, anchor=tk.CENTER)
+        self.labelframe_2.place(relx=0.52,rely=0.455, anchor=tk.CENTER)
+        self.labelframe_3.place(relx=0.85,rely=0.34, anchor=tk.CENTER)
         self.labelframe_4.place(relx=0.85,rely=0.7, anchor=tk.CENTER)
     def changepw(self):
         def ok():
@@ -234,7 +259,7 @@ class Basedesk_Admin:
             newpw2 = self.input_newpw2.get()
             # print(oldpw,newpw,newpw2)
             if newpw == newpw2:
-                changeResult = changepw(account=Baccount,newpassword=newpw,oldpassword=oldpw)
+                changeResult = changepw_sql(account=Baccount,newpassword=newpw,oldpassword=oldpw)
                 if changeResult =="wrongoldpassword":
                     tk.messagebox.showerror(title='土城醫院檢驗科', message='舊密碼錯誤，請重新輸入!')
                     self.input_oldpw.delete(0,tk.END)
@@ -276,8 +301,6 @@ class Basedesk_Admin:
         self.newWindow = ctk.CTkToplevel()
         counter.getaccount(Baccount)
         C = Count(self.newWindow,self.master)
-        # C.gui_arrang()
-        # C.infocreate()
     def urinesedimentcounter(self):
         self.destroy()
         from counter_Urin import Count
@@ -294,6 +317,13 @@ class Basedesk_Admin:
         C.gui_arrang()
         C.infocreate()
         C.mainloop()
+    def practise(self):
+        import counter_practise
+        from counter_practise import PRACTISE
+        self.master.withdraw() #把basedesk隱藏
+        self.newWindow = ctk.CTkToplevel()
+        counter_practise.getaccount(Baccount)
+        P = PRACTISE(self.newWindow,self.master)
     def scoresearch(self):
         import ScoreSearch
         from ScoreSearch import Search
@@ -312,6 +342,16 @@ class Basedesk_Admin:
         self.master.withdraw() #把basedesk隱藏
         self.newWindow = ctk.CTkToplevel()
         M = Modify(self.newWindow,self.master)
+    def scorecal_test(self):
+        from scorecal_test import SCORE_CAL
+        self.master.withdraw() #把basedesk隱藏
+        self.newWindow = ctk.CTkToplevel()
+        SC = SCORE_CAL(self.newWindow,self.master)
+    def scorecal(self):
+        from score_calculation import SCORE_CAL
+        self.master.withdraw() #把basedesk隱藏
+        self.newWindow = ctk.CTkToplevel()
+        SC = SCORE_CAL(self.newWindow,self.master)
     def IDmanage(self):
         from IDmanage import ID
         self.master.withdraw() #把basedesk隱藏

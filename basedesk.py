@@ -9,7 +9,7 @@ import customtkinter as ctk
 import subprocess
 
 from setuptools import Command
-from verifyAccount import changepw
+from verifyAccount import changepw_sql
 from counter import getaccount
 # global account
 # account = sys.argv[1]
@@ -70,37 +70,47 @@ class Basedesk:
             )
         self.labelframe_2.pack()
         ##各類功能選單
-        self.button_1=ctk.CTkButton(
+        self.button_blood=ctk.CTkButton(
             self.labelframe_1, 
             command = self.bloodcounter, 
             text = "血液考核",
             fg_color='#FF9900', 
-            width=200,height=80,
+            width=200,height=70,
             font=('微軟正黑體',26),
             text_color="#000000",
             )
-        self.button_1.grid(row = 0,column = 0,padx=10, pady=15)
-        self.button_backup=ctk.CTkButton(
+        self.button_blood.grid(row = 0,column = 0,padx=10, pady=15)
+        self.button_urin=ctk.CTkButton(
             self.labelframe_1, 
             command = self.urinesedimentcounter, 
             text = "尿沉渣考核",
             fg_color='#FF9900', 
-            width=200,height=80,
+            width=200,height=70,
             font=('微軟正黑體',26),
             text_color="#000000",
             )
-        self.button_backup.grid(row = 0,column = 1,padx=10, pady=15)
-        self.button_1s=ctk.CTkButton(
+        self.button_urin.grid(row = 0,column = 1,padx=10, pady=15)
+        self.button_bodyfluid=ctk.CTkButton(
             self.labelframe_1, 
             command = self.bodyfluidcounter, 
             text = "體液考核",
             fg_color='#FF9900', 
-            width=200,height=80,
+            width=200,height=70,
             font=('微軟正黑體',26),
             text_color="#000000"
             )
-        self.button_1s.grid(row = 0,column = 2,padx=10, pady=15)
-        self.button_2=ctk.CTkButton(
+        self.button_bodyfluid.grid(row = 0,column = 2,padx=10, pady=15)
+        self.button_practise=ctk.CTkButton(
+            self.labelframe_1, 
+            command = self.practise, 
+            text = "練習模式",
+            fg_color='#FF9900', 
+            width=200,height=70,
+            font=('微軟正黑體',26),
+            text_color="#000000"
+            )
+        self.button_practise.grid(row = 1,column = 1,padx=10, pady=10)
+        self.button_search=ctk.CTkButton(
             self.labelframe_2, 
             command = self.scoresearch, 
             text = "成績查詢",
@@ -109,8 +119,8 @@ class Basedesk:
             font=('微軟正黑體',26),
             text_color="#000000",
             )
-        self.button_2.pack(padx=10, pady=25)
-        self.button_5=ctk.CTkButton(
+        self.button_search.pack(padx=10, pady=25)
+        self.button_logout=ctk.CTkButton(
             self.master, 
             command = lambda: self.logout_interface(oldmaster), 
             text = "登出", 
@@ -120,8 +130,8 @@ class Basedesk:
             font=('微軟正黑體',24,'bold'),
             text_color="#000000"
             )
-        self.button_5.pack(padx=10, pady=25)
-        self.button_6=ctk.CTkButton(
+        self.button_logout.pack(padx=10, pady=25)
+        self.button_exit=ctk.CTkButton(
             self.master, 
             command = lambda: self.exit_interface(oldmaster), 
             text = "結束使用", 
@@ -131,7 +141,7 @@ class Basedesk:
             font=('微軟正黑體',24,'bold'),
             text_color="#000000"
             )
-        self.button_6.pack()
+        self.button_exit.pack()
         self.button_changepw=ctk.CTkButton(
             self.master, 
             command = self.changepw, 
@@ -154,17 +164,12 @@ class Basedesk:
     # gui_arrang
         self.hellow_label.place(relx=0.5, rely=0.05, anchor=tk.CENTER)
         self.label_1.place(relx=0.5, rely=0.13, anchor=tk.CENTER)
-        # self.button_1.place(relx=0.2,rely=0.4,anchor=tk.CENTER)
-        # self.button_1s.place(relx=0.2,rely=0.55,anchor=tk.CENTER)
-        # self.button_2.place(relx=0.5,rely=0.4,anchor=tk.CENTER)
-        # self.button_2s.place(relx=0.5,rely=0.55,anchor=tk.CENTER)
-        # self.button_3.place(relx=0.8,rely=0.4,anchor=tk.CENTER)
-        self.button_5.place(relx=0.2,rely=0.9,anchor=tk.CENTER)
-        self.button_6.place(relx=0.5,rely=0.9,anchor=tk.CENTER)
+        self.button_logout.place(relx=0.2,rely=0.9,anchor=tk.CENTER)
+        self.button_exit.place(relx=0.5,rely=0.9,anchor=tk.CENTER)
         self.button_changepw.place(relx=0.8,rely=0.9,anchor=tk.CENTER)
         self.cc.place(relx=1, rely=1,anchor=tk.SE) 
-        self.labelframe_1.place(relx=0.5,rely=0.35, anchor=tk.CENTER)
-        self.labelframe_2.place(relx=0.5,rely=0.6, anchor=tk.CENTER)
+        self.labelframe_1.place(relx=0.5,rely=0.4, anchor=tk.CENTER)
+        self.labelframe_2.place(relx=0.5,rely=0.7, anchor=tk.CENTER)
     def changepw(self):
         def ok():
             oldpw = self.input_oldpw.get()
@@ -172,7 +177,7 @@ class Basedesk:
             newpw2 = self.input_newpw2.get()
             # print(oldpw,newpw,newpw2)
             if newpw == newpw2:
-                changeResult = changepw(account=Baccount,newpassword=newpw,oldpassword=oldpw)
+                changeResult = changepw_sql(account=Baccount,newpassword=newpw,oldpassword=oldpw)
                 if changeResult =="wrongoldpassword":
                     tk.messagebox.showerror(title='土城醫院檢驗科', message='舊密碼錯誤，請重新輸入!')
                     self.input_oldpw.delete(0,tk.END)
@@ -215,8 +220,6 @@ class Basedesk:
         self.newWindow = ctk.CTkToplevel()
         counter.getaccount(Baccount)
         C = Count(self.newWindow,self.master)
-        C.gui_arrang()
-        C.infocreate()
     def urinesedimentcounter(self):
         self.destroy()
         from counter_Urin import Count
@@ -233,6 +236,13 @@ class Basedesk:
         C.gui_arrang()
         C.infocreate()
         C.mainloop()
+    def practise(self):
+        import counter_practise
+        from counter_practise import PRACTISE
+        self.master.withdraw() #把basedesk隱藏
+        self.newWindow = ctk.CTkToplevel()
+        counter_practise.getaccount(Baccount)
+        P = PRACTISE(self.newWindow,self.master)
     def scoresearch(self):
         import ScoreSearch
         from ScoreSearch import Search

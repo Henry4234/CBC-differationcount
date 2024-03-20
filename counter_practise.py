@@ -19,12 +19,13 @@ def getaccount(acount):
     # Baccount = "henry423"
     print(Baccount)
     return None
+
 ###sql連線設定
 connection_string = """DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=bloodtest;UID=sa;PWD=1234"""
 try:
     coxn = pyodbc.connect(connection_string)
 except pyodbc.OperationalError:
-    connection_string = "DRIVER={ODBC Driver 17 for SQL Server};SERVER=10.30.47.9;DATABASE=bloodtest;UID=henry423;PWD=1234"
+    connection_string = "DRIVER={ODBC Driver 17 for SQL Server};SERVER=10.30.47.8;DATABASE=bloodtest;UID=henry423;PWD=1234"
 finally:
     coxn = pyodbc.connect(connection_string)
 
@@ -36,24 +37,22 @@ with coxn.cursor() as cursor:
 yearid = dict()
 for row in sql_yearid:
     sql_year, smear_id = row
+    sql_year = str(sql_year)
     if sql_year not in yearid:
         yearid[sql_year] = []
     yearid[sql_year].append(smear_id)
 
-# print(yearid)
-class Count:    #建立計數器
+class PRACTISE:    #建立計數器
     def __init__(self,master,oldmaster=None):
         self.master = master
         self.master.protocol("WM_DELETE_WINDOW",lambda: self.back(oldmaster))
         # super().__init__()
         #建立主視窗前先取得初始資料
-        # jsonfile = open('testdata\data.json','rb')
         jsonfile = open('testdata\data_new.json','rb')
         rawdata = json.load(jsonfile)
         self.rawdata = pd.DataFrame(rawdata["blood"])
-        self.testyear = datetime.today().year
-        # self.testyear = "2019"
         # self.testyear = self.rawdata['year'].unique().tolist()
+        self.testyear = list(yearid.keys())
         self.testlist = []
         # for item in self.rawdata:
         #     self.testdict[item["year"]].append(item["ID"])
@@ -86,7 +85,6 @@ class Count:    #建立計數器
         self.frame_counter = ctk.CTkFrame(self.master)
         self.frame_counter.configure(bg_color='#FCFCFC',fg_color='#F0F0F0',width=600,height=500,corner_radius=8)
         self.frame_counter.propagate(0)
-        # self.frame_counter.bind('<Key>', self.pending)
         #設置框架_textcomment
         self.frame_comment = ctk.CTkFrame(self.master)
         self.frame_comment.configure(bg_color='#FCFCFC',fg_color='#F0F0F0',width=600,height=500,corner_radius=8)
@@ -112,20 +110,23 @@ class Count:    #建立計數器
         #設置標籤
         self.label_exam1 = ctk.CTkLabel(
             self.frame_exam, 
-            text = "考核年度:", 
+            text = "請選擇考核年度:", 
             fg_color='#FCFCFC',
             font=('微軟正黑體',20),
             text_color="#000000",
             width=200
             )
-        self.input_exam1 = ctk.CTkEntry(
+        self.input_exam1 = ctk.CTkComboBox(
             master = self.frame_exam, 
+            # variable=self.testlist,
+            command=self.callback_year,
+            values=self.testyear,
             text_color='#000000',
             fg_color='#F0F0F0',
+            button_color='#0080FF',
             width=120,height=40,
+            state="readonly"
             )
-        self.input_exam1.insert(0,self.testyear)
-        self.input_exam1.configure(state="disabled")
         self.label_exam2 = ctk.CTkLabel(
             self.frame_exam, 
             text = "請選擇考核片:", 
@@ -145,8 +146,6 @@ class Count:    #建立計數器
             width=120,height=40,
             state="readonly"
             )
-        #建立完成後先去呼叫今年度的考片，考生不用再多按一次
-        self.callback_year()
         # self.input_exam.bind("<<ComboboxSelected>>", self.callback)
         self.label_totalcount = ctk.CTkButton(
             self.frame_counter, 
@@ -896,23 +895,40 @@ class Count:    #建立計數器
     
     
     #combobox雙層列表
-    def callback_year(self):  
+    def callback_year(self,event):  
         testno = self.input_exam1.get()
-        fliter = (self.rawdata['year'] == testno)
-        self.testlist = self.rawdata[fliter]['ID']
+        # fliter = (self.rawdata['year'] == testno)
+        # self.testlist = self.rawdata[fliter]['ID']
+        self.testlist = yearid[testno]
         self.input_exam2.configure(values=self.testlist)
+        for key in self.info_cbc:
+            self.info_cbc[key].set(0.0)
 
     def callback(self,event):  
         testyear = self.input_exam1.get()
         testno = self.input_exam2.get()
         filter1 = (self.rawdata['year'] == testyear)
         filter2 = (self.rawdata['ID'] == testno)
-        crawdata = self.rawdata[filter1 & filter2]
-        rawdata = crawdata.iloc[0]['rawdata']
-        gender = crawdata.iloc[0]['gender']
-        age = crawdata.iloc[0]['age']
-        comment = crawdata.iloc[0]['comment']
-        countval = crawdata.iloc[0]['countval'] 
+        with coxn.cursor() as cursor:
+            cursor.execute("SELECT * FROM [bloodtest].[dbo].[bloodinfo] WHERE [year]= %s AND [smear_id]='%s';"%(testyear,testno))
+            crawdata = cursor.fetchone()
+        # crawdata = self.rawdata[filter1 & filter2]
+        # rawdata = crawdata.iloc[0]['rawdata']
+        with coxn.cursor() as cursor:
+            cursor.execute("SELECT * FROM [bloodtest].[dbo].[bloodinfo_cbc] WHERE [smear_id]='%s';"%(testno))
+            field_name = [des[0] for des in cursor.description]
+            rawdata = cursor.fetchone()
+        # print(field_name,rawdata)
+        rawdata_dict = dict(zip(field_name, rawdata))
+        ###
+        del rawdata_dict["smear_id"]
+        rawdata = rawdata_dict
+        ###
+        # print(rawdata)
+        gender = crawdata[3]
+        age = crawdata[4]
+        comment = crawdata[6]
+        countval = crawdata[5]
         for key,value in rawdata.items():
             self.info_cbc[key].set(rawdata[key])
         self.info_oth["gender"].set(gender)
@@ -925,26 +941,13 @@ class Count:    #建立計數器
         #轉換考題的時候要把計數規0(tozero)
     
     def tozero(self):
-        state = self.start.cget("state")
-        if state == "disabled":
-            if tk.messagebox.askyesno(title='土城醫院檢驗科',message="確定要歸0嗎?"):
-                ##歸0 counter
-                for value in self.keybordmatrix.values():
-                    value[4].set(0)
-                    value[5].set(0)
-                ##歸0 總數
-                self.totalcount.set(0)
-                self.input_testcomment.delete("0.0",ctk.END)
-            else:
-                 return
-        else:
-            ##歸0 counter
-            for value in self.keybordmatrix.values():
-                value[4].set(0)
-                value[5].set(0)
-            ##歸0 總數
-            self.totalcount.set(0)
-            self.input_testcomment.delete("0.0",ctk.END)
+        ##歸0 counter
+        for value in self.keybordmatrix.values():
+            value[4].set(0)
+            value[5].set(0)
+        ##歸0 總數
+        self.totalcount.set(0)
+        self.input_testcomment.delete("0.0",ctk.END)
     def tstart(self):
         ##檢查是否有考片
         testyear = self.input_exam1.get()
@@ -957,13 +960,13 @@ class Count:    #建立計數器
 考片編號%s"""%(testyear,testno)):
             self.open = datetime.now()
             self.doTick = True
-            # self.zero.configure(state='disabled')
+            self.start.configure(state='disabled')
+            self.zero.configure(state='disabled')
             self.btn_sendtest.configure(state='normal')
-            # self.input_exam1.configure(state='disabled')
+            self.input_exam1.configure(state='disabled')
             self.input_exam2.configure(state='disabled')
             self.clear_btn.configure(state='disabled')
             self.tozero()
-            self.start.configure(state='disabled')
             self.update_clock()
         else:
             return
@@ -1005,11 +1008,10 @@ class Count:    #建立計數器
             # savedic = {}
             # savedic["year"] = testyear
             # savedic["ID"] = testno
-            # # savedic["personID"] = "henry423"
-            # savedic["personID"] = Baccount
+            # savedic["personID"] = "henry423"
+            # # savedic["personID"] = Baccount
             # savedic["timestamp"] = stamp
             # savedic["Ans"] = ans
-            # savedic["comment"] = comment
             # # print (savedic)
             # ##開啟rawdata.json
             # jsonfile = open('testdata/rawdata.json','rb')
@@ -1017,14 +1019,14 @@ class Count:    #建立計數器
             # rawdata = a["blood"]
             # rawdata.append(savedic)
             # # print(ml)
-            # with open('testdata/rawdata.json','w',encoding="utf8") as r:
-            #     json.dump(a,r,ensure_ascii=False)
-            #     r.close()
+            # # with open('testdata/rawdata.json','w') as r:
+            # #     json.dump(a,r)
+            # #     r.close()
             tk.messagebox.showinfo(title='土城長庚檢驗科', message="交卷成功!")
             self.tozero()
             self.start.configure(state=tk.NORMAL)
             self.zero.configure(state=tk.NORMAL)
-            # self.input_exam1.configure(state='readonly')
+            self.input_exam1.configure(state='readonly')
             self.input_exam2.configure(state='readonly')
             self.clear_btn.configure(state='normal')
             self.stop_clock()
@@ -1033,7 +1035,7 @@ class Count:    #建立計數器
 
     def clear(self):
         if tk.messagebox.askyesno(title="土城醫院檢驗科",message="確定要清除所選擇的考片?"):
-            # self.input_exam1.set("")
+            self.input_exam1.set("")
             self.input_exam2.set("")
             for value in self.info_cbc.values():
                 value.set(0.0)
@@ -1144,7 +1146,7 @@ class Count:    #建立計數器
 def main():  
     # 初始化物件  
     root = ctk.CTk()
-    C = Count(root)  
+    P = PRACTISE(root)  
     root.mainloop()  
   
 if __name__ == "__main__":  

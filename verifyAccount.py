@@ -1,6 +1,43 @@
+import pandas as pd
+import sqlalchemy as sa
+
+
 import bcrypt
 import json
+import pymysql
 ##bcrypt pw
+
+import pyodbc
+#建立與mySQL連線資料
+connection_string = """DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=bloodtest;UID=sa;PWD=1234"""
+try:
+    coxn = pyodbc.connect(connection_string)
+except pyodbc.OperationalError:
+    connection_string = "DRIVER={ODBC Driver 17 for SQL Server};SERVER=10.30.47.9;DATABASE=bloodtest;UID=henry423;PWD=1234"
+finally:
+    coxn = pyodbc.connect(connection_string)
+
+
+
+with coxn.cursor() as cursor:
+    query = "SELECT ac,pw  FROM [bloodtest].[dbo].[id];"
+    cursor.execute(query)
+    acpw = dict(cursor.fetchall())
+
+
+# print(db)
+def refresh_acpw():
+    global acpw
+    query = "SELECT ac,pw  FROM [bloodtest].[dbo].[id];"
+    cursor.execute(query)
+    acpw = dict(cursor.fetchall())
+# with conn.cursor() as cursor:
+#     cursor.execute("SELECT `ac`, `pw` FROM `id`;")
+# acpw = cursor.fetchall()
+# acpw = dict((x, y) for x, y in acpw)
+
+# print(acpw)
+
 def verifyAccountData(account,password):
     md = {}
     jsonfile = open('in.json','rb')
@@ -27,7 +64,7 @@ def verifyAccountData(account,password):
     #不在資料庫中彈出是否註冊的框
     else:
         return "noAccount"
-##change pw(for manager)
+##(desert)change pw(for manager)
 def changepw(account,newpassword,oldpassword):
     jsonfile = open('in.json','rb')
     a = json.load(jsonfile)
@@ -55,7 +92,7 @@ def changepw(account,newpassword,oldpassword):
         json.dump(a,r)
         r.close()
     return "success"
-##change pw(for user)
+##(desert)change pw(for user)
 def changepw2(account,newpassword):
     jsonfile = open('in.json','rb')
     a = json.load(jsonfile)
@@ -76,7 +113,7 @@ def changepw2(account,newpassword):
         json.dump(a,r)
         r.close()
     return "success"
-##add account(for manager)
+##(desert)add account(for manager)
 def addaccount(account,password):
     jsonfile = open('in.json','rb')
     a = json.load(jsonfile)
@@ -100,39 +137,105 @@ def addaccount(account,password):
             json.dump(a,r)
             r.close()
         return "success"
-##delete account(for manager)
+##(UPDATE)delete account(for manager)
 def delaccount(account):
-    jsonfile = open('in.json','rb')
-    a = json.load(jsonfile)
-    ml = a['member']
-    md = {}
-    for i in ml:
-        x = i['ID']
-        y = i['token']
-        md[x] = y
-    IL = [key for key in md.keys()]
-    idx = IL.index(account)
-    ml.pop(idx)
-    # print(ml)
-    with open('in.json','w') as r:
-        json.dump(a,r)
-        r.close()
+    with coxn.cursor() as cursor:
+        sql = """DELETE FROM [bloodtest].[dbo].[id] WHERE [ac]='%s';"""%(account)
+        cursor.execute(sql)
+    coxn.commit()
+    # jsonfile = open('in.json','rb')
+    # a = json.load(jsonfile)
+    # ml = a['member']
+    # md = {}
+    # for i in ml:
+    #     x = i['ID']
+    #     y = i['token']
+    #     md[x] = y
+    # IL = [key for key in md.keys()]
+    # idx = IL.index(account)
+    # ml.pop(idx)
+    # # print(ml)
+    # with open('in.json','w') as r:
+    #     json.dump(a,r)
+    #     r.close()
     return "success"
-##edit account(for manager)
+##(UPDATE)edit account(for manager)
 def editaccount(oldaccount,newaccount):
-    jsonfile = open('in.json','rb')
-    a = json.load(jsonfile)
-    ml = a['member']
-    md = {}
-    for i in ml:
-        x = i['ID']
-        y = i['token']
-        md[x] = y
-    IL = [key for key in md.keys()]
-    idx = IL.index(oldaccount)
-    ml[idx]["ID"] = newaccount
-    # print(ml)
-    with open('in.json','w') as r:
-        json.dump(a,r)
-        r.close()
+    with coxn.cursor() as cursor:
+        sql = """UPDATE [bloodtest].[dbo].[id] SET [ac] = '%s' WHERE [ac]='%s';"""%(newaccount,oldaccount)
+        cursor.execute(sql)
+    coxn.commit()
+    # jsonfile = open('in.json','rb')
+    # a = json.load(jsonfile)
+    # ml = a['member']
+    # md = {}
+    # for i in ml:
+    #     x = i['ID']
+    #     y = i['token']
+    #     md[x] = y
+    # IL = [key for key in md.keys()]
+    # idx = IL.index(oldaccount)
+    # ml[idx]["ID"] = newaccount
+    # # print(ml)
+    # with open('in.json','w') as r:
+    #     json.dump(a,r)
+    #     r.close()
     return "success"
+
+def verifyAccountData_sql(account,password):
+    # with open('pw.pickle','rb') as usr_file:
+    #         usrs_info=pickle.load(usr_file)
+    if account in acpw:
+        ddd = acpw[account]
+        ddd = bytes(ddd,encoding="utf8")
+        password = bytes(password,encoding="utf8")
+        if account == "admin" and bcrypt.checkpw(password,ddd)==True:
+            return "master"
+        elif bcrypt.checkpw(password,ddd)==True:
+            return "user"
+        else:
+            return "noPassword"
+    #使用者名稱密碼不能為空
+    elif account=='' or password=='' :
+        return "empty"
+    #不在資料庫中彈出是否註冊的框
+    else:
+        return "noAccount"
+
+def changepw_sql(account,newpassword,oldpassword=None):
+    newpassword = bytes(newpassword,encoding="utf8")
+    if oldpassword == None:
+        pass
+    else:
+        oldpassword = bytes(oldpassword,encoding="utf8")
+        #verifyold
+        old = bytes(acpw[account],encoding="utf8")
+        if bcrypt.checkpw(oldpassword,old)==True:
+            pass
+        else:
+            return "wrongoldpassword"
+    #gen
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(newpassword,salt)
+    update = hashed.decode('utf-8')
+    with coxn.cursor() as cursor:
+        sql = "UPDATE [bloodtest].[dbo].[id] SET [pw] = '%s' WHERE [ac]='%s';"%(update,account)
+        cursor.execute(sql)
+    coxn.commit()
+    return "success"
+
+def addaccount_sql(branch, account,password):
+    password = bytes(password,encoding="utf8")
+    refresh_acpw()
+    if account in acpw:
+        return "duplicate"
+    else:
+        #gen
+        salt = bcrypt.gensalt()
+        hashed = bcrypt.hashpw(password,salt)
+        update = hashed.decode('utf-8')
+        with coxn.cursor() as cursor:
+            sql = """INSERT INTO [bloodtest].[dbo].[id] ("院區","ac","pw") VALUES ('%s','%s','%s');"""%(branch,account,update)
+            cursor.execute(sql)
+        coxn.commit()
+        return "success"
