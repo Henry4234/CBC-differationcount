@@ -73,24 +73,24 @@ class Modify:
             "plt":DoubleVar()
         }
         self.ansinfo={
-            "plasma cell": DoubleVar(),
-            "abnormal lympho": DoubleVar(),
-            "megakaryocyte": DoubleVar(),
-            "nRBC": DoubleVar(),
-            "blast": DoubleVar(),
-            "metamyelocyte": DoubleVar(),
-            "eosinophil": DoubleVar(),
-            "plasmacytoid": DoubleVar(),
-            "promonocyte": DoubleVar(),
-            "promyelocyte": DoubleVar(),
-            "band neutropil": DoubleVar(),
-            "basopil": DoubleVar(),
-            "atypical lymphocyte": DoubleVar(),
-            "hypersegmented neutrophil": DoubleVar(),
-            "myelocyte": DoubleVar(),
-            "segmented neutrophil": DoubleVar(),
-            "lymphocyte": DoubleVar(),
-            "monocyte": DoubleVar()
+            "plasma cell": [DoubleVar(),IntVar(),IntVar()],
+            "abnormal lympho": [DoubleVar(),IntVar(),IntVar()],
+            "megakaryocyte": [DoubleVar(),IntVar(),IntVar()],
+            "nRBC": [DoubleVar(),IntVar(),IntVar()],
+            "blast": [DoubleVar(),IntVar(),IntVar()],
+            "metamyelocyte": [DoubleVar(),IntVar(),IntVar()],
+            "eosinophil": [DoubleVar(),IntVar(),IntVar()],
+            "plasmacytoid": [DoubleVar(),IntVar(),IntVar()],
+            "promonocyte": [DoubleVar(),IntVar(),IntVar()],
+            "promyelocyte": [DoubleVar(),IntVar(),IntVar()],
+            "band neutropil": [DoubleVar(),IntVar(),IntVar()],
+            "basopil": [DoubleVar(),IntVar(),IntVar()],
+            "atypical lymphocyte": [DoubleVar(),IntVar(),IntVar()],
+            "hypersegmented neutrophil": [DoubleVar(),IntVar(),IntVar()],
+            "myelocyte": [DoubleVar(),IntVar(),IntVar()],
+            "segmented neutrophil":[DoubleVar(),IntVar(),IntVar()],
+            "lymphocyte": [DoubleVar(),IntVar(),IntVar()],
+            "monocyte": [DoubleVar(),IntVar(),IntVar()]
         }
         self.ageinfo={
             "age": IntVar()
@@ -231,8 +231,8 @@ class Modify:
         ##(f2s)旁邊編輯窗格
         self.testinfolist = [key for key in self.testinfo.keys()]
         self.ansinfolist = [key for key in self.ansinfo.keys()]
-        global entrylst
-        entrylst = []
+        global entrylst,mustlst,mustnotlst
+        entrylst,mustlst,mustnotlst = [],[],[]
         #loop 0,放入項目(WBC/RBC/Hct...)
         for j in range(0,9):
             #第一欄
@@ -386,8 +386,9 @@ class Modify:
 ##左手邊按鍵區域 血液考題設定/血液參數設定/尿液考題設定/離開
     #(f3)參數設定介面介面
     def changefigure(self):
-        for value in self.ansinfo.values():
-            value.set(0)        # self.labelframe_2.grid_forget()
+        for values in self.ansinfo.values():
+            for value in values:
+                value.set(0)        # self.labelframe_2.grid_forget()
         entrylst.clear()
         self.slcid = StringVar()
         ##把frame3放到frame1上
@@ -447,9 +448,31 @@ class Modify:
             width=140,height=40
             )
         self.title3.grid(row=2,column=2,sticky='nw')
+        ##加入細胞參數的標題列
+        f3s_title=["細胞名稱","百分比","must","not","細胞名稱","百分比","must","not"]
+        for i in range(0,len(f3s_title)):
+            self.f3s_celltitle = ctk.CTkEntry(
+                self.frame_3s,
+                width=100,height=20,
+                bg_color='#FFEEDD',
+                fg_color='#89AEB5',
+                # text="",
+                font=('微軟正黑體',12),
+                text_color="#000000"
+                )
+            self.f3s_celltitle.insert(tk.END,f3s_title[i])
+            self.f3s_celltitle.grid(row=0,column=i)
+            self.f3s_celltitle.configure(state="disabled")
+            ##修改must,mustnot的欄寬
+            if i==2 or i==3 or i==6 or i==7:
+                self.f3s_celltitle.configure(width=40)
+            elif i==1 or i==5:
+                self.f3s_celltitle.configure(width=60)
+       
+        
         #loop 0,2,4 放入項目(cell type)
-        for h in range(0,6,2):
-            for k in range(0,9):
+        for h in range(0,9,4):
+            for k in range(1,10):
                 if h == 0:
                     self.modifytable = ctk.CTkEntry(
                             self.frame_3s,
@@ -460,10 +483,10 @@ class Modify:
                             font=('微軟正黑體',12),
                             text_color="#000000"
                             )
-                    self.modifytable.insert(tk.END,self.ansinfolist[k])
+                    self.modifytable.insert(tk.END,self.ansinfolist[k-1])
                     self.modifytable.grid(row=k,column=h)
                     self.modifytable.configure(state="disabled")
-                elif h == 2:
+                elif h == 4:
                     self.modifytable = ctk.CTkEntry(
                         self.frame_3s,
                         width=100,height=20,
@@ -475,7 +498,7 @@ class Modify:
                         )
                     #從ansinfolist[11]開始跳
                     try:
-                        self.modifytable.insert(tk.END,self.ansinfolist[k+9])
+                        self.modifytable.insert(tk.END,self.ansinfolist[k+8])
                     #補空格補到10格
                     except IndexError:
                         self.modifytable = ctk.CTkEntry(
@@ -491,26 +514,54 @@ class Modify:
                         self.modifytable.grid(row=k,column=h)
                         self.modifytable.configure(state="disabled")
         #(f3)loop 1,3,5放入變數(self.testinfo.values())
-        m = 0
+        m = 1
         for values in self.ansinfo.values():
             self.modifytable = ctk.CTkEntry(
                     self.frame_3s,
                     width=50,height=20,
                     bg_color='#FFEEDD',
                     fg_color='#FFFFFF',
-                    textvariable= values,
+                    textvariable= values[0],
                     font=('微軟正黑體',14),
                     text_color="#000000"
                     )
-            if m<9:
+            self.modifytable_must = ctk.CTkCheckBox(
+                    self.frame_3s,
+                    width=10,height=12,
+                    checkbox_width=20,checkbox_height=20,
+                    bg_color="#FFEEDD",
+                    text="",
+                    variable=values[1],
+                    )
+            self.modifytable_mustnot = ctk.CTkCheckBox(
+                    self.frame_3s,
+                    width=10,height=12,
+                    checkbox_width=20,checkbox_height=20,
+                    bg_color="#FFEEDD",
+                    text="",
+                    variable=values[2],
+                    )
+            if m<10:
                 self.modifytable.grid(row = m, column = 1,sticky='nsew')
                 self.modifytable.configure(state="disabled")
                 entrylst.append(self.modifytable)
+                self.modifytable_must.grid(row = m, column = 2,sticky='n')
+                self.modifytable_must.configure(state="disabled")
+                mustlst.append(self.modifytable_must)
+                self.modifytable_mustnot.grid(row = m, column = 3,sticky='n')
+                self.modifytable_mustnot.configure(state="disabled")
+                mustnotlst.append(self.modifytable_mustnot)
                 m += 1
             else:
-                self.modifytable.grid(row = m-9, column = 3,sticky='nsew')
+                self.modifytable.grid(row = m-9, column = 5,sticky='nsew')
                 self.modifytable.configure(state="disabled")
                 entrylst.append(self.modifytable)
+                self.modifytable_must.grid(row = m-9, column = 6,sticky='n')
+                self.modifytable_must.configure(state="disabled")
+                mustlst.append(self.modifytable_must)
+                self.modifytable_mustnot.grid(row = m-9, column = 7,sticky='n')
+                self.modifytable_mustnot.configure(state="disabled")
+                mustnotlst.append(self.modifytable_mustnot)
                 m += 1
         ##(f3)變數補空格
         # self.modifytable = ctk.CTkEntry(
@@ -741,6 +792,10 @@ class Modify:
                 self.f3_yes_btn.configure(state="normal")
                 for value in entrylst:
                     value.configure(state="normal")
+                for value in mustlst:
+                    value.configure(state="normal")
+                for value in mustnotlst:
+                    value.configure(state="normal")
             else:
                 return
     #(f3)確定
@@ -757,12 +812,29 @@ class Modify:
             # result=result[0]
             #建立一個新的dict，裝修改過後的testdata資料
             dict_rawdata={}
+            dict_modify_must={}
+            dict_modify_mustnot={}
             for key,value in self.ansinfo.items():
-                A = value.get()
+                A = value[0].get()
+                must = value[1].get()
+                mustnot = value[2].get()
                 dict_rawdata[key]=A
+                dict_modify_must[key]=must
+                dict_modify_mustnot[key]=mustnot
+            ##上傳百分比數值
             for key,value in dict_rawdata.items():
                 with coxn.cursor() as cursor:
-                    query = "UPDATE [bloodtest].[dbo].[bloodinfo_ans] SET [%s] = %.2f WHERE [smear_id]='%s';"%(key,value,self.focustest)
+                    query = "UPDATE [bloodtest].[dbo].[bloodinfo_ans2] SET [value] = %.2f WHERE [smear_id]='%s' AND [celltype] ='%s';"%(value,self.focustest,key)
+                    cursor.execute(query)
+                coxn.commit()
+            for key,value in dict_modify_must.items():
+                with coxn.cursor() as cursor:
+                    query = "UPDATE [bloodtest].[dbo].[bloodinfo_ans2] SET [must] = %d WHERE [smear_id]='%s' AND [celltype] ='%s';"%(value,self.focustest,key)
+                    cursor.execute(query)
+                coxn.commit()
+            for key,value in dict_modify_mustnot.items():
+                with coxn.cursor() as cursor:
+                    query = "UPDATE [bloodtest].[dbo].[bloodinfo_ans2] SET [mustnot] = %d WHERE [smear_id]='%s' AND [celltype] ='%s';"%(value,self.focustest,key)
                     cursor.execute(query)
                 coxn.commit()
             # self.rawdata.at[result,'Ans'] = dict_rawdata
@@ -779,6 +851,10 @@ class Modify:
             self.f3_yes_btn.configure(state="disabled")
             for value in entrylst:
                 value.configure(state="disabled")
+            for value in mustlst:
+                value.configure(state="disabled")
+            for value in mustnotlst:
+                value.configure(state="disabled")
         else:
             return
     #(f3)清除
@@ -786,8 +862,9 @@ class Modify:
         if tk.messagebox.askyesno(title='土城醫院檢驗科', message='確定清除?'):
             self.f3_input_year.set("")
             self.f3_test_listbox.delete(0,tk.END)
-            for value in self.ansinfo.values():
-                value.set(0)
+            for values in self.ansinfo.values():
+                for value in values:
+                    value.set(0)
         else:
             return
 ##(f3)事件連結
@@ -833,12 +910,20 @@ class Modify:
         #     filter_test = "SELECT * FROM [bloodtest].[dbo].[bloodinfo_ans] WHERE [smear_id]='%s';"%(slcid)
         #     datadict2 = pd.read_sql_query(sa.text(filter_test), conn).to_dict('records')[0]
         #     del datadict2['smear_id']
+        datadict2 = {}
         with coxn.cursor() as cursor:
-            filter_test = "SELECT [celltype],[value] FROM [bloodtest].[dbo].[bloodinfo_ans2] WHERE [smear_id]='%s';"%(slcid)
+            filter_test = "SELECT [celltype],[value],[must],[mustnot] FROM [bloodtest].[dbo].[bloodinfo_ans2] WHERE [smear_id]='%s';"%(slcid)
             cursor.execute(filter_test)
-            datadict2 = dict(cursor.fetchall())
+            datalist2 = list(cursor.fetchall())
+        ##將擷取到的轉換為dictionary型態
+        for item in datalist2:
+            key = item[0]
+            value = list(item[1:])
+            datadict2[key] = value
         for key,value in datadict2.items():
-            self.ansinfo[key].set(value)
+            self.ansinfo[key][0].set(value[0])
+            self.ansinfo[key][1].set(value[1])
+            self.ansinfo[key][2].set(value[2])
 ##(switch)從血液參數設定切回考題設定
     def switch1(self):
         self.labelframe_3.grid_forget()

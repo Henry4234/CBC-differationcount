@@ -161,7 +161,7 @@ class Basedesk_Admin:
         self.button_3m.pack(padx=10, pady=15)
         self.button_3s=ctk.CTkButton(
             self.labelframe_2,
-            command = None, 
+            command = self.output_score, 
             text = "成績匯出", 
             fg_color='#FF9900',
             width=160,height=40,
@@ -342,16 +342,21 @@ class Basedesk_Admin:
         self.master.withdraw() #把basedesk隱藏
         self.newWindow = ctk.CTkToplevel()
         M = Modify(self.newWindow,self.master)
-    def scorecal_test(self):
-        from scorecal_test import SCORE_CAL
+    def output_score(self):
+        from output_score import OUTPUT_SCORE
         self.master.withdraw() #把basedesk隱藏
         self.newWindow = ctk.CTkToplevel()
-        SC = SCORE_CAL(self.newWindow,self.master)
+        OPS = OUTPUT_SCORE(self.newWindow,self.master)
+    def scorecal_test(self):
+        from scorecal_test import SCORE_TEST
+        self.master.withdraw() #把basedesk隱藏
+        self.newWindow = ctk.CTkToplevel()
+        SC = SCORE_TEST(self.newWindow,self.master)
     def scorecal(self):
         from score_calculation import SCORE_CAL
         self.master.withdraw() #把basedesk隱藏
         self.newWindow = ctk.CTkToplevel()
-        SC = SCORE_CAL(self.newWindow,self.master)
+        SC_2 = SCORE_CAL(self.newWindow,self.master)
     def IDmanage(self):
         from IDmanage import ID
         self.master.withdraw() #把basedesk隱藏

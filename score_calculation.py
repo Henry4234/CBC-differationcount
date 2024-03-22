@@ -229,7 +229,7 @@ class SCORE_CAL:
         #返回主介面
         self.btn_back = ctk.CTkButton(
             self.labelframe_1,
-            text="離開",
+            text="返回",
             anchor=tk.CENTER,
             command=lambda: self.back(oldmaster),
             fg_color="#FF9224",

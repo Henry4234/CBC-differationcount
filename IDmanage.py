@@ -17,6 +17,12 @@ except pyodbc.OperationalError:
     connection_string = "DRIVER={ODBC Driver 17 for SQL Server};SERVER=10.30.47.9;DATABASE=bloodtest;UID=henry423;PWD=1234"
 finally:
     coxn = pyodbc.connect(connection_string)
+##擷取SQL ID table中有的院區
+with coxn.cursor() as cursor:
+    unique_hos = "SELECT DISTINCT [院區] FROM [bloodtest].[dbo].[id];"
+    cursor.execute(unique_hos)
+    hos = cursor.fetchall()
+hos = [e[0] for e in hos]
 
 class ID:
     
@@ -149,7 +155,7 @@ class ID:
         #(f2)院區滾動欄位
         self.input_branch = ctk.CTkComboBox(
                     self.labelframe_2, 
-                    values=["林口","土城","台北","基隆","大里仁愛"],
+                    values=hos,
                     # fg_color='#000000',
                     button_color='#FF9900',
                     width=120,height=40,
@@ -243,24 +249,42 @@ class ID:
                     width=120,height=120
                     )
         self.label_3.grid(row=0,column=0,columnspan=5,sticky='ew')
+        self.f3_label_branch = ctk.CTkLabel(
+                    self.labelframe_3, 
+                    text = "院區:", 
+                    fg_color='#FFEEDD',
+                    font=('微軟正黑體',20),
+                    text_color="#000000",
+                    width=140,height=40
+                    )
+        self.f3_label_branch.grid(row=1,column=1,columnspan=2,)
+        self.f3_input_branch = ctk.CTkComboBox(
+                    self.labelframe_3, 
+                    values=hos,
+                    command=self.updatelist,
+                    button_color='#FF9900',
+                    width=120,height=40,
+                    # font=('微軟正黑體',16,)
+                    )
+        self.f3_input_branch.grid(row=1,column=3,sticky='w')
         #spacer
         self.spacer = ctk.CTkLabel(
             self.labelframe_3,
             text=" ",
             width=10
         )
-        self.spacer.grid(row=1,column=0,rowspan=3,)
+        self.spacer.grid(row=2,column=0,rowspan=3,)
         ##(f3)左手邊tk.listbox & 卷軸
         self.scrollbar = tk.Scrollbar(self.labelframe_3)
-        self.scrollbar.grid(row=1,column=2,rowspan=3,sticky='nsew')
+        self.scrollbar.grid(row=2,column=2,rowspan=3,sticky='nsew')
         self.id_listbox = tk.Listbox(
             self.labelframe_3,
             yscrollcommand=self.scrollbar.set,
             height=10,width=8,
             font=('微軟正黑體',20)
         )
-        self.updatelist()
-        self.id_listbox.grid(row=1,column=1,rowspan=3,sticky='nsew',)
+        # self.updatelist()
+        self.id_listbox.grid(row=2,column=1,rowspan=3,sticky='nsew',)
         self.scrollbar.config(command=self.id_listbox.yview)
         #(f3)listbox bind
         self.id_listbox.bind("<<ListboxSelect>>", listbox_event)        
@@ -273,7 +297,7 @@ class ID:
                     text_color="#000000",
                     width=140,height=40
                     )
-        self.label_ID2.grid(row=1,column=3,pady=10,sticky='se')
+        self.label_ID2.grid(row=2,column=3,pady=10,sticky='se')
         self.label_pw2 = ctk.CTkLabel(
                     self.labelframe_3, 
                     text = "密碼:", 
@@ -282,20 +306,20 @@ class ID:
                     text_color="#000000",
                     width=140,height=40
                     )
-        self.label_pw2.grid(row=2,column=3,pady=10,sticky='ne')
+        self.label_pw2.grid(row=3,column=3,pady=10,sticky='ne')
         self.input_ID2 = ctk.CTkEntry(
                     self.labelframe_3, 
                     width=120,height=40,
                     state='disabled'
                     )
-        self.input_ID2.grid(row=1,column=4,pady=10,sticky='sw')
+        self.input_ID2.grid(row=2,column=4,pady=10,sticky='sw')
         #(f3)double clicked ID bind
         self.input_ID2 .bind("<Double-Button-1>", self.clicklabelac)
         self.input_pwe2 = ctk.CTkEntry(
                     self.labelframe_3, 
                     width=120,height=40
                     )
-        self.input_pwe2.grid(row=2,column=4,pady=10,sticky='nw')
+        self.input_pwe2.grid(row=3,column=4,pady=10,sticky='nw')
         #(f3)double clicked password bind
         self.input_pwe2.bind("<Double-Button-1>", self.clicklabelpw)
         #(f3)下面修改按鍵
@@ -307,7 +331,7 @@ class ID:
             fg_color='#FF9900',
             text_color='#000000',
             state='disabled')
-        self.chgpw_btn.grid(row=3,column=3,padx=40,sticky='n')
+        self.chgpw_btn.grid(row=4,column=3,padx=40,sticky='n')
         #(f3)刪除帳號按鍵
         self.del_btn = ctk.CTkButton(
             self.labelframe_3,
@@ -316,12 +340,13 @@ class ID:
             height=30,
             fg_color='#FF9900',
             text_color='#000000')
-        self.del_btn.grid(row=3,column=4,padx=40,sticky='n')
+        self.del_btn.grid(row=4,column=4,padx=40,sticky='n')
 ##(f3)修改帳號介面功能區    
     #(f3)更新listbox(MSSQL裡面有的帳號)
-    def updatelist(self):
+    def updatelist(self,event):
+        branch = self.f3_input_branch.get()
         with coxn.cursor() as cursor:
-            query = "SELECT ac,pw  FROM [bloodtest].[dbo].[id];"
+            query = "SELECT ac,pw  FROM [bloodtest].[dbo].[id] WHERE [院區]='%s';"%(branch)
             cursor.execute(query)
             acpw = dict(cursor.fetchall())
         # jsonfile = open('in.json','rb')
@@ -334,6 +359,10 @@ class ID:
         self.id_listbox.delete(0,tk.END)
         for i in idlist:
             self.id_listbox.insert(tk.END, i)
+    #清除list中資料
+    def clearlist(self):
+        self.id_listbox.delete(0,tk.END)
+        return
     #(f3)點兩下帳號可以修改帳號
     def clicklabelac(self,event):
         self.toedit = self.input_ID2.get()
@@ -360,7 +389,7 @@ class ID:
                 self.input_ID2.delete(0,tk.END)
                 self.input_ID2.configure(state='disable')
                 self.input_pwe2.delete(0,tk.END)
-                self.updatelist()
+                self.clearlist()
                 self.chgpw_btn.configure(state='disabled')
             else:
                 tk.messagebox.showerror(title='土城醫院檢驗科', message='發生未知錯誤，請聯絡管理員')
@@ -416,7 +445,7 @@ class ID:
             self.input_ID2.delete(0,tk.END)
             self.input_ID2.configure(state='disable')
             self.input_pwe2.delete(0,tk.END)
-            self.updatelist()
+            self.clearlist()
         else:
             tk.messagebox.showerror(title='土城醫院檢驗科', message='發生未知錯誤，請聯絡管理員')
     

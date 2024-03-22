@@ -1,0 +1,114 @@
+{
+    "blood": [
+        {
+            "year": "109",
+            "ID": "B001",
+            "personID": "admin",
+            "timestamp": "2022/12/28 09:12:30",
+            "Ans": {
+                "plasma cell": 0,
+                "abnormal lympho": 0,
+                "megakaryocyte": 0,
+                "nRBC": 0,
+                "abnormal monocyte": 0,
+                "blast": 0,
+                "metamyelocyte": 0,
+                "eosinopil": 0,
+                "plasma cytoid": 0,
+                "promonocyte": 0,
+                "promyelocyte": 0,
+                "band neutropil": 0,
+                "basopil": 0,
+                "atypical lymphocyte": 0,
+                "hypersegmented neutrophil": 0,
+                "myelocyte": 0,
+                "segmented neutrophil": 0,
+                "lymphocyte": 0,
+                "monocyte": 0
+            },
+            "comments": ""
+        },
+        {
+            "year": "110",
+            "ID": "B002",
+            "personID": "henry423",
+            "timestamp": "2022/12/28 09:12:30",
+            "Ans": {
+                "plasma cell": 0,
+                "abnormal lympho": 0,
+                "megakaryocyte": 0,
+                "nRBC": 0,
+                "abnormal monocyte": 0,
+                "blast": 0,
+                "metamyelocyte": 0,
+                "eosinopil": 0,
+                "plasma cytoid": 0,
+                "promonocyte": 0,
+                "promyelocyte": 0,
+                "band neutropil": 0,
+                "basopil": 0,
+                "atypical lymphocyte": 0,
+                "hypersegmented neutrophil": 0,
+                "myelocyte": 0,
+                "segmented neutrophil": 0,
+                "lymphocyte": 0,
+                "monocyte": 0
+            }
+        },
+        {
+            "year": "109",
+            "ID": "B002",
+            "personID": "henry423",
+            "timestamp": "2023/02/11 13:21:00",
+            "Ans": {
+                "plasma cell": 0,
+                "abnormal lympho": 0,
+                "megakaryocyte": 0,
+                "nRBC": 0,
+                "abnormal monocyte": 0,
+                "blast": 0,
+                "metamyelocyte": 0,
+                "eosinopil": 0,
+                "plasma cytoid": 0,
+                "promonocyte": 0,
+                "promyelocyte": 0,
+                "band neutropil": 28,
+                "basopil": 0,
+                "atypical lymphocyte": 0,
+                "hypersegmented neutrophil": 0,
+                "myelocyte": 28,
+                "segmented neutrophil": 23,
+                "lymphocyte": 20,
+                "monocyte": 1
+            }
+        },
+        {
+            "year": "110",
+            "ID": "B002",
+            "personID": "admin",
+            "timestamp": "2023/02/11 13:39:38",
+            "Ans": {
+                "plasma cell": 0,
+                "abnormal lympho": 0,
+                "megakaryocyte": 0,
+                "nRBC": 0,
+                "abnormal monocyte": 0,
+                "blast": 0,
+                "metamyelocyte": 0,
+                "eosinopil": 0,
+                "plasma cytoid": 0,
+                "promonocyte": 0,
+                "promyelocyte": 19,
+                "band neutropil": 0,
+                "basopil": 0,
+                "atypical lymphocyte": 0,
+                "hypersegmented neutrophil": 0,
+                "myelocyte": 23,
+                "segmented neutrophil": 21,
+                "lymphocyte": 17,
+                "monocyte": 20
+            }
+        }
+        
+    ]
+}
