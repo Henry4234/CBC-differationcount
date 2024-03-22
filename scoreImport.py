@@ -1,4 +1,4 @@
-import os
+import os,shutil
 import tkinter as tk
 from tkinter import ttk
 from tkinter import RIDGE, DoubleVar, StringVar, ttk, messagebox,IntVar, filedialog
@@ -305,7 +305,7 @@ class Import:
             self.master,
             text="範例檔案下載",
             anchor=tk.CENTER,
-            command=None,
+            command=self.download_file,
             fg_color="#FF9224",
             bg_color='#FFEEDD',
             font=('微軟正黑體',22),
@@ -762,6 +762,20 @@ class Import:
         self.labelframe_vfok.place(relx=0.49,rely=0.54,anchor=tk.CENTER)
         self.labelframe_vfok.tkraise()
         self.updatetojson_btn.configure(state=tk.NORMAL)
+    ##下載範例檔案
+    def download_file(self):
+        dl_path = filedialog.askdirectory()
+        if dl_path:
+            template="testdata\\template_CBCDATA.xlsx"
+            # template = template.replace("\\","/")
+            destination_path = os.path.join(dl_path, "template_CBCDATA.xlsx")
+            try:
+                shutil.copy(template, destination_path)
+                tk.messagebox.showinfo(title='土城醫院檢驗科', message=f"文件已成功保存到 {destination_path}")
+            except Exception as e:
+                tk.messagebox.showerror(title='土城醫院檢驗科', message=f"保存文件时出错：{e}")
+        else:
+            return
     ##返回basdesk按鈕    
     def back(self,oldmaster):
         try:
