@@ -8,8 +8,17 @@ login GUI
 - 利用Enter快捷鍵登入
 
 # 2-1. 功能介面(管理員)
-![螢幕擷取畫面 2023-02-22 113141](https://user-images.githubusercontent.com/102476562/221457167-ab039b24-1c53-44cb-a4c4-74be62266eee.png)
 
+![螢幕擷取畫面 2024-03-26 092247](https://github.com/Henry4234/CBC-differationcount/assets/102476562/ea9712a8-5cbd-44de-84ca-7cfac29508f4)
+
+v2.1 版本新增功能
+
+1. 考核介面
+    1. 練習模式
+2. 成績查詢
+    1. 成績計算
+    2. 成績試算
+--------------------------------------------
 base desk GUI (admin)
 1. 考核介面
     1. 血液考核
@@ -21,7 +30,6 @@ base desk GUI (admin)
 3. 考題匯入/成績匯出
     1. 考題匯入
     2. 考題設定
-    3. 成績匯出
 4. 帳號管理
     1. 新增修改帳號
 `basedesk_admin.getaccount(account)`函式可以擷取登入帳號，顯示在歡迎回來後方，也利後續存取db
