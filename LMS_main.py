@@ -15,12 +15,10 @@ def resource_path(relative_path):
 
     return os.path.join(base_path, relative_path)
 
-# ac = sys.argv[1]
-# ht = sys.argv[2]
-ac = ""
-ht = "土城"
+ac = sys.argv[1]
+ht = sys.argv[2]
 
-print(ac,ht)
+# print(ac,ht)
 
 class LMS:
 
@@ -41,6 +39,7 @@ class LMS:
                 self.loginuser()
         elif verifyResult=='empty':
             tk.messagebox.showerror(title='土城醫院檢驗科', message='參數錯誤，請聯繫管理人員!')
+            return
     #user登入
     def loginuser(self):
         self.newWindow = ctk.CTk()
