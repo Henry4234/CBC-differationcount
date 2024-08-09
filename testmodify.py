@@ -1,5 +1,5 @@
 #authorised by Henry Tsai
-import sys
+import sys,os
 import tkinter as tk
 import pandas as pd
 from tkinter import IntVar, simpledialog,messagebox,DoubleVar,StringVar
@@ -15,16 +15,27 @@ import sqlalchemy as sa
 
 import pyodbc
 #建立與mySQL連線資料
-connection_string = """DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=bloodtest;UID=sa;PWD=1234"""
+connection_string = """DRIVER={ODBC Driver 17 for SQL Server};SERVER=220.133.50.28;DATABASE=bloodtest;UID=cgmh;PWD=B[-!wYJ(E_i7Aj3r"""
 try:
     coxn = pyodbc.connect(connection_string)
-except pyodbc.OperationalError:
-    connection_string = "DRIVER={ODBC Driver 17 for SQL Server};SERVER=10.30.47.9;DATABASE=bloodtest;UID=henry423;PWD=1234"
+except pyodbc.InterfaceError:
+    # connection_string = "DRIVER={ODBC Driver 11 for SQL Server};SERVER=10.30.47.9;DATABASE=bloodtest;UID=henry423;PWD=1234"
+    connection_string = "DRIVER={SQL Server};SERVER=10.30.47.9;DATABASE=bloodtest;UID=henry423;PWD=1234"
 finally:
     coxn = pyodbc.connect(connection_string)
 
 connection_url = URL.create("mssql+pyodbc", query={"odbc_connect": connection_string})
 engine = create_engine(connection_url)
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 class Modify:
     
@@ -99,7 +110,7 @@ class Modify:
             "comment": StringVar(),
         }
         ##左手邊功能區
-        self.people = ctk.CTkImage(Image.open("assets\pages.png"),size=(120,120))
+        self.people = ctk.CTkImage(Image.open(resource_path("assets\pages.png")),size=(120,120))
         self.label_1 = ctk.CTkLabel(
                     self.labelframe_1, 
                     image=self.people,

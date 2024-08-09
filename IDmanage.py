@@ -1,5 +1,5 @@
 #authorised by Henry Tsai
-import sys
+import sys,os
 import tkinter as tk
 from tkinter import simpledialog
 from tkinter import messagebox
@@ -9,12 +9,22 @@ from setuptools import Command
 from verifyAccount import addaccount_sql,delaccount,editaccount,changepw_sql
 from PIL import Image
 
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
 
-connection_string = """DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=bloodtest;UID=sa;PWD=1234"""
+    return os.path.join(base_path, relative_path)
+
+connection_string = """DRIVER={ODBC Driver 17 for SQL Server};SERVER=220.133.50.28;DATABASE=bloodtest;UID=cgmh;PWD=B[-!wYJ(E_i7Aj3r"""
 try:
     coxn = pyodbc.connect(connection_string)
-except pyodbc.OperationalError:
-    connection_string = "DRIVER={ODBC Driver 17 for SQL Server};SERVER=10.30.47.9;DATABASE=bloodtest;UID=henry423;PWD=1234"
+except pyodbc.InterfaceError:
+    # connection_string = "DRIVER={ODBC Driver 11 for SQL Server};SERVER=10.30.47.9;DATABASE=bloodtest;UID=henry423;PWD=1234"
+    connection_string = "DRIVER={SQL Server};SERVER=10.30.47.9;DATABASE=bloodtest;UID=henry423;PWD=1234"
 finally:
     coxn = pyodbc.connect(connection_string)
 ##擷取SQL ID table中有的院區
@@ -47,7 +57,7 @@ class ID:
         self.labelframe_3 = ctk.CTkFrame(self.master,fg_color="#FFEEDD",bg_color="#FFEEDD")
         # self.labelframe_2.grid_columnconfigure(1, weight=1)
 ##左手邊功能區
-        self.people = ctk.CTkImage(Image.open("assets\person.png"),size=(160,120))
+        self.people = ctk.CTkImage(Image.open(resource_path("assets\person.png")),size=(160,120))
         self.label_1 = ctk.CTkLabel(
                     self.labelframe_1, 
                     image=self.people,

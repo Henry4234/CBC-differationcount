@@ -1,3 +1,4 @@
+import sys,os
 import tkinter as tk
 import customtkinter  as ctk
 from tksheet import Sheet
@@ -20,11 +21,12 @@ import sqlalchemy as sa
 #     # print(Baccount)
 #     return None
 #SQL連線設定
-connection_string = """DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=bloodtest;UID=sa;PWD=1234"""
+connection_string = """DRIVER={ODBC Driver 17 for SQL Server};SERVER=220.133.50.28;DATABASE=bloodtest;UID=cgmh;PWD=B[-!wYJ(E_i7Aj3r"""
 try:
     coxn = pyodbc.connect(connection_string)
-except pyodbc.OperationalError:
-    connection_string = "DRIVER={ODBC Driver 17 for SQL Server};SERVER=10.30.47.9;DATABASE=bloodtest;UID=henry423;PWD=1234"
+except pyodbc.InterfaceError:
+    # connection_string = "DRIVER={ODBC Driver 11 for SQL Server};SERVER=10.30.47.9;DATABASE=bloodtest;UID=henry423;PWD=1234"
+    connection_string = "DRIVER={SQL Server};SERVER=10.30.47.9;DATABASE=bloodtest;UID=henry423;PWD=1234"
 finally:
     coxn = pyodbc.connect(connection_string)
 #取出年份(唯一)
@@ -40,6 +42,17 @@ str_un_year =[]
 for item in un_year:
     item  = str(item)
     str_un_year.append(item)
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
 class SCORE_CAL:
 
     def __init__(self,master,oldmaster=None):
@@ -57,9 +70,9 @@ class SCORE_CAL:
         self.labelframe_1.grid(row=0, column=0, rowspan=2,sticky='nsew')
         self.labelframe_2 = ctk.CTkFrame(self.master,fg_color="#FFEEDD",bg_color="#FFEEDD")
         self.labelframe_2.grid(row=0, column=1)
-        self.testicon = ctk.CTkImage(Image.open("assets\pages.png"),size=(120,120))
+        self.testicon = ctk.CTkImage(Image.open(resource_path("assets\pages.png")),size=(120,120))
         #引入henry計算Range
-        filename = "./chart/rangechart.json"
+        filename = resource_path("./chart/rangechart.json")
         self.rangechart = pd.read_json(filename)
         # self.celllst = Ans
         #計算用的list

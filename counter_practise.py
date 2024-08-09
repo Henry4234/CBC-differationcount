@@ -1,3 +1,4 @@
+import sys,os
 import tkinter as tk
 import pandas as pd
 from tkinter import RIDGE, DoubleVar, StringVar, ttk, messagebox,IntVar
@@ -20,12 +21,23 @@ def getaccount(acount):
     print(Baccount)
     return None
 
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
 ###sql連線設定
-connection_string = """DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=bloodtest;UID=sa;PWD=1234"""
+connection_string = """DRIVER={ODBC Driver 17 for SQL Server};SERVER=220.133.50.28;DATABASE=bloodtest;UID=cgmh;PWD=B[-!wYJ(E_i7Aj3r"""
 try:
     coxn = pyodbc.connect(connection_string)
-except pyodbc.OperationalError:
-    connection_string = "DRIVER={ODBC Driver 17 for SQL Server};SERVER=10.30.47.8;DATABASE=bloodtest;UID=henry423;PWD=1234"
+except pyodbc.InterfaceError:
+    # connection_string = "DRIVER={ODBC Driver 11 for SQL Server};SERVER=10.30.47.9;DATABASE=bloodtest;UID=henry423;PWD=1234"
+    connection_string = "DRIVER={SQL Server};SERVER=10.30.47.9;DATABASE=bloodtest;UID=henry423;PWD=1234"
 finally:
     coxn = pyodbc.connect(connection_string)
 
@@ -48,7 +60,7 @@ class PRACTISE:    #建立計數器
         self.master.protocol("WM_DELETE_WINDOW",lambda: self.back(oldmaster))
         # super().__init__()
         #建立主視窗前先取得初始資料
-        jsonfile = open('testdata\data_new.json','rb')
+        jsonfile = open(resource_path('testdata\data_new.json'),'rb')
         rawdata = json.load(jsonfile)
         self.rawdata = pd.DataFrame(rawdata["blood"])
         # self.testyear = self.rawdata['year'].unique().tolist()
@@ -854,7 +866,8 @@ class PRACTISE:    #建立計數器
                 self.keybordmatrix[key][5].set(percent)
             else:
                 val = self.keybordmatrix[key][4].get()
-                self.keybordmatrix[key][5].set(val)
+                per_tal = val / ((tal - 1) // 100 + 1)
+                self.keybordmatrix[key][5].set(per_tal)
     
     #函式下數
     def minus_count(self,event):
@@ -882,7 +895,8 @@ class PRACTISE:    #建立計數器
                 self.keybordmatrix[key][5].set(percent)
             else:
                 val = self.keybordmatrix[key][4].get()
-                self.keybordmatrix[key][5].set(val)
+                per_tal = val / ((tal - 1) // 100 + 1)
+                self.keybordmatrix[key][5].set(per_tal)
 
     #上下數switch
     def updown(self,event):
@@ -941,13 +955,26 @@ class PRACTISE:    #建立計數器
         #轉換考題的時候要把計數規0(tozero)
     
     def tozero(self):
-        ##歸0 counter
-        for value in self.keybordmatrix.values():
-            value[4].set(0)
-            value[5].set(0)
-        ##歸0 總數
-        self.totalcount.set(0)
-        self.input_testcomment.delete("0.0",ctk.END)
+        state = self.start.cget("state")
+        if state == "disabled":
+            if tk.messagebox.askyesno(title='土城醫院檢驗科',message="確定要歸0嗎?"):
+                ##歸0 counter
+                for value in self.keybordmatrix.values():
+                    value[4].set(0)
+                    value[5].set(0)
+                ##歸0 總數
+                self.totalcount.set(0)
+                self.input_testcomment.delete("0.0",ctk.END)
+            else:
+                 return
+        else:
+            ##歸0 counter
+            for value in self.keybordmatrix.values():
+                value[4].set(0)
+                value[5].set(0)
+            ##歸0 總數
+            self.totalcount.set(0)
+            self.input_testcomment.delete("0.0",ctk.END)
     def tstart(self):
         ##檢查是否有考片
         testyear = self.input_exam1.get()

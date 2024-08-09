@@ -1,5 +1,5 @@
 #authorised by Henry Tsai
-import sys
+import sys,os
 import datetime
 
 import tkinter as tk
@@ -27,6 +27,15 @@ from matplotlib.figure import Figure
 mpl.rcParams['font.sans-serif'] = ['Microsoft JhengHei']  # 中文顯示
 mpl.rcParams['axes.unicode_minus'] = False  # 負號顯示
 
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 def getaccount(acount):
     global Baccount
@@ -61,7 +70,7 @@ class Search:
         # self.labelframe_3.grid(row=0,column=3,rowspan=2,padx=20,pady=15)
         # self.labelframe_2.grid_columnconfigure(1, weight=1)
         ##計算全部應考次數&今年度應考次數
-        jsonfile = open('testdata\score.json','rb')
+        jsonfile = open(resource_path('testdata\score.json'),'rb')
         rawdata = json.load(jsonfile)
         count = pd.DataFrame(rawdata[Baccount])
         count["timestamp"] = count["timestamp"].astype("datetime64")
@@ -71,7 +80,7 @@ class Search:
         newtestcount = new["ID"].count()
         # print(count)
         #左手邊功能區
-        self.people = ctk.CTkImage(Image.open("assets\score.png"),size=(80,80))
+        self.people = ctk.CTkImage(Image.open(resource_path("assets\score.png")),size=(80,80))
         self.label_1 = ctk.CTkLabel(
                     self.labelframe_1, 
                     image=self.people,
