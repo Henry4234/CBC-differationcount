@@ -28,10 +28,22 @@ with coxn.cursor() as cursor:
 
 ##建立dict 包含院區帳號acht
 with coxn.cursor() as cursor:
-    query = "SELECT ac,院區  FROM [bloodtest].[dbo].[id];"
+    query = "SELECT ac,[hospital_code].[院區]  FROM [bloodtest].[dbo].[id] JOIN [bloodtest].[dbo].[hospital_code] ON [hospital_code].[code]=[id].[院區];"
     cursor.execute(query)
     acht = dict(cursor.fetchall())
 # print(acht)
+    
+##建立hospital_code_dict 包含院區帳號acht
+with coxn.cursor() as cursor:
+    query = "SELECT [院區],code FROM [bloodtest].[dbo].[hospital_code];"
+    cursor.execute(query)
+    ht_code = dict(cursor.fetchall())
+ht_code['林口'] = [ht_code['林口'],'4','L']
+ht_code['土城'] = [ht_code['土城'],'C']
+ht_code['大里仁愛'] = [ht_code['大里仁愛'],'I']
+
+# print(ht_code)
+
 def refresh_acpw():
     global acpw
     query = "SELECT ac,pw  FROM [bloodtest].[dbo].[id];"
@@ -233,6 +245,8 @@ def changepw_sql(account,newpassword,oldpassword=None):
 def addaccount_sql(branch, account,password):
     password = bytes(password,encoding="utf8")
     refresh_acpw()
+    #轉成代碼
+    branch = hos_rematrix(branch)
     if account in acpw:
         return "duplicate"
     else:
@@ -245,8 +259,27 @@ def addaccount_sql(branch, account,password):
             cursor.execute(sql)
         coxn.commit()
         return "success"
+def hos_matrix(hospital_code):
+    for key, val in ht_code.items():
+        # 如果值是list，檢查是否包含輸入值
+        if isinstance(val, list) and hospital_code in val:
+            return key
+        # 如果值是單一值，直接比較
+        elif val == hospital_code:
+            return key
+    return "找不到對應的地點"
+
+def hos_rematrix(hospital_name):
+    #如果回傳德是一個list的話
+    if isinstance(ht_code[hospital_name], list):
+        return str(ht_code[hospital_name][0])
+    else:
+        return str(ht_code[hospital_name])
+
 #連接登入LMS
 def verifyAccountData_lms(account,hospital):
+    #傳進來的hospital會是代碼，需要經過轉換
+
     # with open('pw.pickle','rb') as usr_file:
     #         usrs_info=pickle.load(usr_file)
     if account in acht:
@@ -264,8 +297,9 @@ def verifyAccountData_lms(account,hospital):
     #不在資料庫中彈出是否註冊的框
     else:
         return "noAccount"
-    
+#如果table[id]找不到account，或者有account，但沒有院區(可能為重名)，那就INSERT一個帳號給他
 def addaccount_lms(account,hospital):
+    hospital = hos_rematrix(hospital)
     with coxn.cursor() as cursor:
             sql = """INSERT INTO [bloodtest].[dbo].[id] ("院區","ac") VALUES ('%s','%s');"""%(hospital,account)
             cursor.execute(sql)

@@ -48,7 +48,7 @@ finally:
 WB_95 = load_workbook(resource_path("testdata\95.xlsx"))
 ws_95 = WB_95.worksheets[0]
 ##建立95 的dataframe，後續需要計算後匯出saas用
-db_95 = pd.read_excel("testdata\95.xlsx")
+db_95 = pd.read_excel(resource_path("testdata\95.xlsx"))
 # 設定正確的欄位名稱
 db_95.columns = db_95.iloc[0]
 df_95 = db_95[1:]
@@ -324,10 +324,10 @@ WHERE [id].[院區]='%s';;"""%(h_site)
                 self.btn_rawexport.configure(state='normal')
                 self.btn_sasexport.configure(state='normal')
             else:
-                tk.messagebox.showerror(title='土城醫院檢驗科', message='請選擇年份!')
+                tk.messagebox.showerror(title='檢驗醫學部(科)', message='請選擇年份!')
                 return
         else:
-            tk.messagebox.showerror(title='土城醫院檢驗科', message='請選擇院區!所有院區請選擇ALL')
+            tk.messagebox.showerror(title='檢驗醫學部(科)', message='請選擇院區!所有院區請選擇ALL')
             return
         with coxn.cursor() as cursor:
             cursor.execute(srh)
@@ -386,10 +386,10 @@ JOIN [bloodtest].[dbo].[bloodinfo] ON [bloodinfo].[smear_id] = [test_data].[smea
 WHERE [id].[院區]='%s' AND [bloodinfo].[year]=%d;"""%(h_site,int(testyear))
                 file_name = "%d_%s_"%(int(testyear),h_site)
             else:
-                tk.messagebox.showerror(title='土城醫院檢驗科', message='請選擇年份!')
+                tk.messagebox.showerror(title='檢驗醫學部(科)', message='請選擇年份!')
                 return
         else:
-            tk.messagebox.showerror(title='土城醫院檢驗科', message='請選擇院區!所有院區請選擇ALL')
+            tk.messagebox.showerror(title='檢驗醫學部(科)', message='請選擇院區!所有院區請選擇ALL')
             return
         wb = Workbook()
         ws = wb.active
@@ -491,9 +491,9 @@ WHERE [id].[院區]='%s' AND [bloodinfo].[year]=%d;"""%(h_site,int(testyear))
         wb.save(file_name + "考生結果.xlsx")
         filepath = ".//%s考生結果.xlsx"%(file_name)
         if os.path.isfile(filepath):
-            tk.messagebox.showinfo(title='土城醫院檢驗科', message='檔案新增成功!')
+            tk.messagebox.showinfo(title='檢驗醫學部(科)', message='檔案新增成功!')
         else:
-            tk.messagebox.showerror(title='土城醫院檢驗科', message='檔案新增失敗QQ')
+            tk.messagebox.showerror(title='檢驗醫學部(科)', message='檔案新增失敗QQ')
 #########################################↑↑↑↑↑匯出考試結果: 包含考片正確答案，↑↑↑↑↑#########################################
 ##################↓↓↓↓↓匯出考生原始結果: 包含考片正確答案、院區、姓名、考片ID、考試次數、百分比、上下限↓↓↓↓↓##################
     def output_percent(self):
@@ -527,10 +527,10 @@ JOIN [bloodtest].[dbo].[bloodinfo] ON [bloodinfo].[smear_id] = [blood_final].[sm
 WHERE [id].[院區] = '%s' AND [bloodinfo].[year]=%d;"""%(h_site,int(testyear))
                 file_name = "%d_%s_"%(int(testyear),h_site)
             else:
-                tk.messagebox.showerror(title='土城醫院檢驗科', message='請選擇年份!')
+                tk.messagebox.showerror(title='檢驗醫學部(科)', message='請選擇年份!')
                 return
         else:
-            tk.messagebox.showerror(title='土城醫院檢驗科', message='請選擇院區!所有院區請選擇ALL')
+            tk.messagebox.showerror(title='檢驗醫學部(科)', message='請選擇院區!所有院區請選擇ALL')
             return
         with engine.begin() as conn:
             datadict2 = pd.read_sql_query(sa.text(get_ans), conn)
@@ -604,9 +604,9 @@ WHERE [id].[院區] = '%s' AND [bloodinfo].[year]=%d;"""%(h_site,int(testyear))
         wb.save(file_name + "考生原始成績.xlsx")
         filepath = ".//%s考生原始成績.xlsx"%(file_name)
         if os.path.isfile(filepath):
-            tk.messagebox.showinfo(title='土城醫院檢驗科', message='檔案新增成功!')
+            tk.messagebox.showinfo(title='檢驗醫學部(科)', message='檔案新增成功!')
         else:
-            tk.messagebox.showerror(title='土城醫院檢驗科', message='檔案新增失敗QQ')
+            tk.messagebox.showerror(title='檢驗醫學部(科)', message='檔案新增失敗QQ')
 ##################↑↑↑↑↑匯出考生原始結果: 包含考片正確答案、院區、姓名、考片ID、考試次數、百分比、上下限↑↑↑↑↑##################
 ##################↓↓↓↓↓匯出SAS↓↓↓↓↓##################
     def output_sas(self):
@@ -643,10 +643,10 @@ JOIN [bloodtest].[dbo].[bloodinfo_ans2] ON [bloodinfo_ans2].[smear_id] = [test_d
 WHERE [id].[院區]='%s' AND [bloodinfo].[year]=%d;"""%(h_site,int(testyear))
                 file_name = "%d_%s_"%(int(testyear),h_site)
             else:
-                tk.messagebox.showerror(title='土城醫院檢驗科', message='請選擇年份!')
+                tk.messagebox.showerror(title='檢驗醫學部(科)', message='請選擇年份!')
                 return
         else:
-            tk.messagebox.showerror(title='土城醫院檢驗科', message='請選擇院區!所有院區請選擇ALL')
+            tk.messagebox.showerror(title='檢驗醫學部(科)', message='請選擇院區!所有院區請選擇ALL')
             return
         ##建立dict_細胞該數幾顆
         get_id_countvalue = "SELECT [smear_id],[count_value] FROM [bloodinfo];"
@@ -686,9 +686,9 @@ WHERE [id].[院區]='%s' AND [bloodinfo].[year]=%d;"""%(h_site,int(testyear))
         wb.save(file_name + "SAS.xlsx")
         filepath = ".//%sSAS.xlsx"%(file_name)
         if os.path.isfile(filepath):
-            tk.messagebox.showinfo(title='土城醫院檢驗科', message='檔案新增成功!')
+            tk.messagebox.showinfo(title='檢驗醫學部(科)', message='檔案新增成功!')
         else:
-            tk.messagebox.showerror(title='土城醫院檢驗科', message='檔案新增失敗QQ')
+            tk.messagebox.showerror(title='檢驗醫學部(科)', message='檔案新增失敗QQ')
 ##################↑↑↑↑↑匯出SAS↑↑↑↑↑##################
 ##清除按鈕
     def clear(self):

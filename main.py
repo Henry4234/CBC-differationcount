@@ -29,7 +29,7 @@ class Login:    #建立登入介面
         ctk.set_default_color_theme("dark-blue")  
         #設定字型
         # 給主視窗設定標題內容  
-        self.master.title("土城醫院檢驗科")  
+        self.master.title("檢驗醫學部(科)")  
         self.master.geometry('600x400')
         self.master.config(background='#323232')
         # self.account_2 = None
@@ -121,24 +121,24 @@ class Login:    #建立登入介面
         #對賬戶資訊進行驗證，普通使用者返回user，管理員返回master，賬戶錯誤返回noAccount，密碼錯誤返回noPassword  
         verifyResult = verifyAccount.verifyAccountData_sql(account,password)  
         if verifyResult=='master':  
-            tk.messagebox.showinfo(title='土城醫院檢驗科', message='進入管理介面')
+            tk.messagebox.showinfo(title='檢驗醫學部(科)', message='進入管理介面')
             self.input_account.delete(0,tk.END)
             self.input_password.delete(0,tk.END)
             self.loginuseradmin()
         elif verifyResult=='user':  
-            tk.messagebox.showinfo(title='土城醫院檢驗科', message='進入使用者介面')
+            tk.messagebox.showinfo(title='檢驗醫學部(科)', message='進入使用者介面')
             self.input_account.delete(0,tk.END)
             self.input_password.delete(0,tk.END)
             self.loginuser()   
         elif verifyResult=='noAccount':  
-            tk.messagebox.showinfo(title='土城醫院檢驗科', message='該賬號不存在請重新輸入!')
+            tk.messagebox.showinfo(title='檢驗醫學部(科)', message='該賬號不存在請重新輸入!')
             self.input_account.delete(0,tk.END)
             self.input_password.delete(0,tk.END)
         elif verifyResult=='noPassword':  
-            tk.messagebox.showinfo(title='土城醫院檢驗科', message='賬號/密碼錯誤請重新輸入!')
+            tk.messagebox.showinfo(title='檢驗醫學部(科)', message='賬號/密碼錯誤請重新輸入!')
             self.input_password.delete(0,tk.END)
         elif verifyResult=='empty':
-            tk.messagebox.showinfo(title='土城醫院檢驗科', message='未輸入賬號/密碼!')
+            tk.messagebox.showinfo(title='檢驗醫學部(科)', message='未輸入賬號/密碼!')
     def callback(self, event):  #按Enter鍵自動連結登入
         self.backstage_interface()
     def loginuser(self):

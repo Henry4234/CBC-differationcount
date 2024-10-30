@@ -15,30 +15,32 @@ def resource_path(relative_path):
 
     return os.path.join(base_path, relative_path)
 
-ac = sys.argv[1]
-ht = sys.argv[2]
+ht = sys.argv[1]
+ac = sys.argv[2]
+id_none = sys.argv[3]
 
 # print(ac,ht)
 
 class LMS:
 
     def __init__(self):
-        verifyResult = verifyAccount.verifyAccountData_lms(ac,ht)
+        hospital_code = verifyAccount.hos_matrix(ht)
+        verifyResult = verifyAccount.verifyAccountData_lms(ac,hospital_code)
         print(verifyResult)
         if verifyResult=='master':  
-            tk.messagebox.showinfo(title='土城醫院檢驗科', message='進入管理介面')
+            tk.messagebox.showinfo(title='檢驗醫學部(科)', message='進入管理介面')
             self.loginuseradmin()
         elif verifyResult=='user':  
-            tk.messagebox.showinfo(title='土城醫院檢驗科', message='進入使用者介面')
+            tk.messagebox.showinfo(title='檢驗醫學部(科)', message='進入使用者介面')
             self.loginuser()
         elif verifyResult=='nohos' or verifyResult=='noAccount':
-            tk.messagebox.showinfo(title='土城醫院檢驗科', message='初次登入!新增後進入使用者介面')
+            tk.messagebox.showinfo(title='檢驗醫學部(科)', message='初次登入!新增後進入使用者介面')
             stat = verifyAccount.addaccount_lms(ac,ht)
             if stat == "success":
-                tk.messagebox.showinfo(title='土城醫院檢驗科', message='新增使用者成功!')
+                tk.messagebox.showinfo(title='檢驗醫學部(科)', message='新增使用者成功!')
                 self.loginuser()
         elif verifyResult=='empty':
-            tk.messagebox.showerror(title='土城醫院檢驗科', message='參數錯誤，請聯繫管理人員!')
+            tk.messagebox.showerror(title='檢驗醫學部(科)', message='參數錯誤，請聯繫管理人員!')
             return
     #user登入
     def loginuser(self):

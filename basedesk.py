@@ -145,7 +145,8 @@ class Basedesk:
             bg_color='#FFEEDD',
             width=180,height=40,
             font=('微軟正黑體',24,'bold'),
-            text_color="#000000"
+            text_color="#000000",
+            state='disabled'
             )
         self.button_logout.pack(padx=10, pady=25)
         self.button_exit=ctk.CTkButton(
@@ -197,18 +198,18 @@ class Basedesk:
             if newpw == newpw2:
                 changeResult = changepw_sql(account=Baccount,newpassword=newpw,oldpassword=oldpw)
                 if changeResult =="wrongoldpassword":
-                    tk.messagebox.showerror(title='土城醫院檢驗科', message='舊密碼錯誤，請重新輸入!')
+                    tk.messagebox.showerror(title='檢驗醫學部(科)', message='舊密碼錯誤，請重新輸入!')
                     self.input_oldpw.delete(0,tk.END)
                     self.input_newpw.delete(0,tk.END)
                     self.input_newpw2.delete(0,tk.END)
                 elif changeResult =="success":
-                    tk.messagebox.showinfo(title='土城醫院檢驗科', message='密碼更新成功!')
+                    tk.messagebox.showinfo(title='檢驗醫學部(科)', message='密碼更新成功!')
                     self.input_oldpw.delete(0,tk.END)
                     self.input_newpw.delete(0,tk.END)
                     self.input_newpw2.delete(0,tk.END)
                     self.newWindow.destroy()
             else:
-                tk.messagebox.showinfo(title='土城醫院檢驗科', message='新密碼不一致，請重新輸入!')
+                tk.messagebox.showinfo(title='檢驗醫學部(科)', message='新密碼不一致，請重新輸入!')
                 self.input_newpw.delete(0,tk.END)
                 self.input_newpw2.delete(0,tk.END)
         def cancel():
@@ -266,6 +267,7 @@ class Basedesk:
         from practice_image import IMAGEPRACTICE
         self.master.withdraw() #把basedesk隱藏
         self.newWindow = ctk.CTkToplevel()
+        practice_image.getaccount(Baccount)
         IP = IMAGEPRACTICE(self.newWindow,self.master)
     def scoresearch(self):
         import ScoreSearch
@@ -275,17 +277,20 @@ class Basedesk:
         ScoreSearch.getaccount(Baccount)
         S = Search(self.newWindow,self.master)
     def logout_interface(self,oldmaster):
-        if tk.messagebox.askyesno(title='土城醫院檢驗科', message='確定要登出嗎?', ):
-            tk.messagebox.showinfo(title='土城醫院檢驗科', message='已登出!')
+        if tk.messagebox.askyesno(title='檢驗醫學部(科)', message='確定要登出嗎?', ):
+            tk.messagebox.showinfo(title='檢驗醫學部(科)', message='已登出!')
             oldmaster.deiconify()
             self.master.destroy()
         else:
             return
     def exit_interface(self,oldmaster):
-        if tk.messagebox.askyesno(title='土城醫院檢驗科', message='確定要離開嗎?', ):
-            tk.messagebox.showinfo(title='土城醫院檢驗科', message='結束能力試驗!')
+        if tk.messagebox.askyesno(title='檢驗醫學部(科)', message='確定要離開嗎?', ):
+            tk.messagebox.showinfo(title='檢驗醫學部(科)', message='結束能力試驗!')
             self.master.destroy()
-            oldmaster.destroy()
+            try:
+                oldmaster.destroy()
+            except AttributeError:
+                pass
         else:
             return
 

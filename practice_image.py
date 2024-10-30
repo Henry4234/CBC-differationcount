@@ -3,9 +3,17 @@ import tkinter as tk
 from tkinter import simpledialog
 from tkinter import messagebox
 import customtkinter as ctk
+from collections import defaultdict
 import json,pyodbc
 from PIL import Image,ImageTk
 
+#抓取帳號
+def getaccount(acount):
+    global Baccount
+    Baccount = str(acount) 
+    # Baccount = "henry423"
+    print(Baccount)
+    return None
 
 ##連線SQL
 connection_string = """DRIVER={ODBC Driver 17 for SQL Server};SERVER=220.133.50.28;DATABASE=bloodtest;UID=cgmh;PWD=B[-!wYJ(E_i7Aj3r"""
@@ -298,7 +306,7 @@ class IMAGEPRACTICE:
             # print(self.tempt_ans[no_now].get())
             no_now += 1
         else:
-            tk.messagebox.showinfo(title='土城醫院檢驗科', message="這一題為最後一題囉")
+            tk.messagebox.showinfo(title='檢驗醫學部(科)', message="這一題為最後一題囉")
             return
         ##換照片
         self.combobox_no.set(str(no_now))
@@ -323,7 +331,7 @@ class IMAGEPRACTICE:
             no_now += 1
             self.var_info.set(cell_info[self.std_ans[no_now]])
         else:
-            tk.messagebox.showinfo(title='土城醫院檢驗科', message="這一題為最後一題囉")
+            tk.messagebox.showinfo(title='檢驗醫學部(科)', message="這一題為最後一題囉")
             return
         #先知道下一題是錯是對，要從self.lst_tf去查
         if self.lst_tf[no_now-1]==0:
@@ -345,7 +353,7 @@ class IMAGEPRACTICE:
             self.ans_var.set(0)
             no_now -= 1
         else:
-            tk.messagebox.showinfo(title='土城醫院檢驗科', message="這一題為第一題喔")
+            tk.messagebox.showinfo(title='檢驗醫學部(科)', message="這一題為第一題喔")
             return
         ##換照片
         self.combobox_no.set(str(no_now))
@@ -369,7 +377,7 @@ class IMAGEPRACTICE:
             no_now -= 1
             self.var_info.set(cell_info[self.std_ans[no_now]])
         else:
-            tk.messagebox.showinfo(title='土城醫院檢驗科', message="這一題為第一題喔")
+            tk.messagebox.showinfo(title='檢驗醫學部(科)', message="這一題為第一題喔")
             return
         #先知道下一題是錯是對，要從self.lst_tf去查
         if self.lst_tf[no_now-1]==0:
@@ -393,12 +401,12 @@ class IMAGEPRACTICE:
         none_ans  = [index for (index, item) in enumerate(all_ans) if item == 0]
         ##檢查是否有未填答的
         if len(none_ans)!=0:
-            if tk.messagebox.askyesno(title='土城醫院檢驗科', message="""尚未答題:
+            if tk.messagebox.askyesno(title='檢驗醫學部(科)', message="""尚未答題:
 %s
 要繼續交卷嗎?"""%(str(none_ans))):
                 self.submmit_final(all_ans)
         else:
-            if tk.messagebox.askyesno(title='土城醫院檢驗科', message="確定交卷?"):
+            if tk.messagebox.askyesno(title='檢驗醫學部(科)', message="確定交卷?"):
                 self.submmit_final(all_ans)
     ##改考卷
     def submmit_final(self,input_ans):
@@ -421,7 +429,6 @@ class IMAGEPRACTICE:
         std_ans_no={}
         for key in self.std_ans:
             std_ans_no[key] = ans_no[self.std_ans[key]]
-        # print(self.std_ans)
         #把input_ans轉換成str在檢討的時候會用到
         self.lst_yrans=[]
         for k in range(0,len(input_ans)):
@@ -431,22 +438,28 @@ class IMAGEPRACTICE:
                 self.lst_yrans.append(no_ans[input_ans[k]])
         ##跟input_ans對答案，也就是學生的答案
         #學生的答案是list，現在要用dictionary對答案，
-        # print(input_ans)
-        self.lst_tf = []
+        # print(self.lst_yrans)
+        self.statistics= defaultdict(list)  #建立self.statistics={}提供上傳至SQL
+        self.lst_tf = []      #self.lst_tf:指儲存true or false的訊息
         for j in range(0,len(input_ans)):
             r_ans = std_ans_no[j+1]    #標準答案
+            name_ans = self.std_ans[j+1]    #標準答案(string)
             student_ans = input_ans[j]  #學生答案
             if r_ans == student_ans:    #比對相不相吻合
                 self.lst_tf.append(1)
+                self.statistics[name_ans].append(1)
             else:
                 self.lst_tf.append(0)
+                self.statistics[name_ans].append(0)
         count_true = self.lst_tf.count(1)
-        # print(self.lst_tf)
-        tk.messagebox.showinfo(title='土城醫院檢驗科', message="""恭喜完成!
+        
+        # print(self.statistics)
+        self.upload_cell_result()   #上傳至SQL的definition
+        tk.messagebox.showinfo(title='檢驗醫學部(科)', message="""恭喜完成!
 共50題，
 答對 %d 題
 答錯 %d 題"""%(count_true,50-count_true))
-        if tk.messagebox.askyesno(title='土城醫院檢驗科', message="是否要觀看檢討?"):
+        if tk.messagebox.askyesno(title='檢驗醫學部(科)', message="是否要觀看檢討?"):
             self.view_result()
         else:
             return
@@ -533,6 +546,39 @@ class IMAGEPRACTICE:
         self.var_stdans.set(self.std_ans[1])   #標準答案dict
         self.var_yrans.set(self.lst_yrans[0])  #學生的答案
         self.var_info.set(cell_info[self.std_ans[1]])  #細胞解釋
+    ##上傳結果至SQL中
+    def upload_cell_result(self):
+        ##確認輸入者id
+        with coxn.cursor() as cursor:
+            cursor.execute("SELECT No FROM[bloodtest].[dbo].[id] WHERE [ac]='%s';" %(Baccount))
+            ac = cursor.fetchone()[0]
+        ##檢查為第幾次練習
+        with coxn.cursor() as cursor:
+            cursor.execute("SELECT MAX(count) FROM[bloodtest].[dbo].[cell_test_data] WHERE [id]=%d;" %(ac))
+            sql_count = cursor.fetchone()[0]
+        #如果練習次數不等於空值的話，那就繼續壘加上去
+        if sql_count != None:
+            sql_count +=1
+        else:   #如果是空值的話，帶入第一次
+            sql_count =1
+        #先將defaultdic轉換為一般dic
+        self.statistics = dict(self.statistics)
+        #將value中的list結果變成百分比(0,0.33,0.5,0.66)
+        dict_percent_statistics={}
+        for key, value in self.statistics.items():
+            per_result = round(sum(value)/len(value),2)
+            dict_percent_statistics[key] = per_result
+
+        print(dict_percent_statistics)
+        for key, value in dict_percent_statistics.items():
+            #建立上傳SQL語句
+            sql_upload_var="""INSERT INTO [bloodtest].[dbo].[cell_test_data] ("id","count","celltype","rate") 
+                VALUES (%d,%d,'%s',%.2f);"""%(ac,sql_count,key,value)
+            with coxn.cursor() as cursor:
+                cursor.execute(sql_upload_var)
+            coxn.commit()
+        
+        # return
     ##返回
     def exit(self,oldmaster):
         try:

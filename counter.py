@@ -957,7 +957,7 @@ class Count:    #建立計數器
     def tozero(self):
         state = self.start.cget("state")
         if state == "disabled":
-            if tk.messagebox.askyesno(title='土城醫院檢驗科',message="確定要歸0嗎?"):
+            if tk.messagebox.askyesno(title='檢驗醫學部(科)',message="確定要歸0嗎?"):
                 ##歸0 counter
                 for value in self.keybordmatrix.values():
                     value[4].set(0)
@@ -980,9 +980,9 @@ class Count:    #建立計數器
         testyear = self.input_exam1.get()
         testno = self.input_exam2.get()
         if testyear=="" or testno=="":
-            tk.messagebox.showerror(title='土城醫院檢驗科',message="尚未選擇考片!選擇後再開始測驗!")
+            tk.messagebox.showerror(title='檢驗醫學部(科)',message="尚未選擇考片!選擇後再開始測驗!")
             return
-        if tk.messagebox.askyesno(title='土城醫院檢驗科',message="""確定要開始測驗?
+        if tk.messagebox.askyesno(title='檢驗醫學部(科)',message="""確定要開始測驗?
 考片年份:%s
 考片編號%s"""%(testyear,testno)):
             self.open = datetime.now()
@@ -1003,7 +1003,7 @@ class Count:    #建立計數器
         self.master.focus_set()
         self.master.bind("<Key>",self.pending)
     def sendtest(self):
-        if tk.messagebox.askyesno(title='土城長庚檢驗科', message='確定要交卷?', ):
+        if tk.messagebox.askyesno(title='檢驗醫學部(科)', message='確定要交卷?', ):
             testyear = self.input_exam1.get()
             testno = self.input_exam2.get()
             stamp = datetime.now()
@@ -1050,11 +1050,12 @@ class Count:    #建立計數器
             # with open('testdata/rawdata.json','w',encoding="utf8") as r:
             #     json.dump(a,r,ensure_ascii=False)
             #     r.close()
-            tk.messagebox.showinfo(title='土城長庚檢驗科', message="交卷成功!")
+            tk.messagebox.showinfo(title='檢驗醫學部(科)', message="交卷成功!")
             self.tozero()
             self.start.configure(state=tk.NORMAL)
             self.zero.configure(state=tk.NORMAL)
             # self.input_exam1.configure(state='readonly')
+            self.btn_sendtest.configure(state='disabled')
             self.input_exam2.configure(state='readonly')
             self.clear_btn.configure(state='normal')
             self.stop_clock()
@@ -1062,7 +1063,7 @@ class Count:    #建立計數器
             return
 
     def clear(self):
-        if tk.messagebox.askyesno(title="土城醫院檢驗科",message="確定要清除所選擇的考片?"):
+        if tk.messagebox.askyesno(title="檢驗醫學部(科)",message="確定要清除所選擇的考片?"):
             # self.input_exam1.set("")
             self.input_exam2.set("")
             for value in self.info_cbc.values():
@@ -1162,7 +1163,7 @@ class Count:    #建立計數器
         cancel_btn.grid(row=9,column=3,pady=5)
 
     def back(self,oldmaster):
-        # if tk.messagebox.askyesno(title='土城長庚檢驗科', message='確定要離開計數畫面，返回主畫面嗎?', ):
+        # if tk.messagebox.askyesno(title='檢驗醫學部(科)', message='確定要離開計數畫面，返回主畫面嗎?', ):
         try:
             oldmaster.deiconify()
             self.master.withdraw()

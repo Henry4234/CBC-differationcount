@@ -720,14 +720,14 @@ class Import:
         ##                                        ┌rawdata = ["WBC","RBC",...]
         ##merge成一個list:verify，然後比對傳入資料┤
         ##                                        └rawdata_a = ["plasma cell","abnormal lympho"]
-        verify = ["WBC","RBC","HB","Hct","MCV","MCH","MCHC","RDW","Plt","plasma cell","abnormal lympho","megakaryocyte","nRBC","blast","metamyelocyte","eosinopil","plasmacytoid","promonocyte","promyelocyte","band neutropil","basopil","atypical lymphocyte","hypersegmented neutrophil","myelocyte","segmented neutrophil","lymphocyte","monocyte"]
+        verify = ["WBC","RBC","HB","Hct","MCV","MCH","MCHC","RDW","Plt","plasma cell","abnormal lympho","megakaryocyte","nRBC","blast","metamyelocyte","eosinophil","plasmacytoid","promonocyte","promyelocyte","band neutropil","basopil","atypical lymphocyte","hypersegmented neutrophil","myelocyte","segmented neutrophil","lymphocyte","monocyte"]
         # print(verify)
         ##對比是否有重複值在JSON內        
         if self.testyear in yearid:
             if str(self.testname) in yearid[self.testyear]:
                 self.labelframe_vfnok.place(relx=0.49,rely=0.54,anchor=tk.CENTER)
                 self.labelframe_vfnok.tkraise()
-                tk.messagebox.showerror(title='土城長庚檢驗科', message="檔案重複!請檢查檔案後重新輸入!!")
+                tk.messagebox.showerror(title='檢驗醫學部(科)', message="檔案重複!請檢查檔案後重新輸入!!")
                 return None
         else:
             pass
@@ -737,7 +737,7 @@ class Import:
         except KeyError:
             self.labelframe_vfnok.place(relx=0.49,rely=0.54,anchor=tk.CENTER)
             self.labelframe_vfnok.tkraise()
-            tk.messagebox.showerror(title='土城長庚檢驗科', message="檔案錯誤!請檢查檔案後重新輸入!!")
+            tk.messagebox.showerror(title='檢驗醫學部(科)', message="檔案錯誤!請檢查檔案後重新輸入!!")
             return
         # print(itemcompair)
         self.verifyframe.pack_forget()
@@ -746,9 +746,10 @@ class Import:
             if itemcompair[j] == verify[j]:
                 continue
             else:
+                print(itemcompair[j],verify[j])
                 self.labelframe_vfnok.place(relx=0.49,rely=0.54,anchor=tk.CENTER)
                 self.labelframe_vfnok.tkraise()
-                tk.messagebox.showerror(title='土城長庚檢驗科', message="檔案錯誤!請檢查檔案後重新輸入!!")
+                tk.messagebox.showerror(title='檢驗醫學部(科)', message="檔案錯誤!請檢查檔案後重新輸入!!")
                 return None
         ##還要驗證加起來是否100 跟 must & mustnot有沒有打架
         v_db = self.df.drop([i for i in range(0,9)])
@@ -766,7 +767,7 @@ class Import:
         else:
             self.labelframe_vfnok.place(relx=0.49,rely=0.54,anchor=tk.CENTER)
             self.labelframe_vfnok.tkraise()
-            tk.messagebox.showerror(title='土城長庚檢驗科', message="細胞加總非100!請檢查檔案後重新輸入!!")
+            tk.messagebox.showerror(title='檢驗醫學部(科)', message="細胞加總非100!請檢查檔案後重新輸入!!")
             return None
         #must/mustnot檢查
         must_lst = v_db["must"].tolist()
@@ -777,7 +778,7 @@ class Import:
             else:
                 self.labelframe_vfnok.place(relx=0.49,rely=0.54,anchor=tk.CENTER)
                 self.labelframe_vfnok.tkraise()
-                tk.messagebox.showerror(title='土城長庚檢驗科', message="不可同時存在must/mustnot!請檢查檔案後重新輸入!!")
+                tk.messagebox.showerror(title='檢驗醫學部(科)', message="不可同時存在must/mustnot!請檢查檔案後重新輸入!!")
                 return None
         self.labelframe_vfok.pack()
         self.labelframe_vfok.place(relx=0.49,rely=0.54,anchor=tk.CENTER)
@@ -792,9 +793,9 @@ class Import:
             destination_path = os.path.join(dl_path, "template_CBCDATA.xlsx")
             try:
                 shutil.copy(template, destination_path)
-                tk.messagebox.showinfo(title='土城醫院檢驗科', message=f"文件已成功保存到 {destination_path}")
+                tk.messagebox.showinfo(title='檢驗醫學部(科)', message=f"文件已成功保存到 {destination_path}")
             except Exception as e:
-                tk.messagebox.showerror(title='土城醫院檢驗科', message=f"保存文件時出錯：{e}")
+                tk.messagebox.showerror(title='檢驗醫學部(科)', message=f"保存文件時出錯：{e}")
         else:
             return
     ##返回basdesk按鈕    
@@ -903,7 +904,7 @@ class Import:
         # aa.truncate()   ##清空JSON檔案
         # aa.write(json.dumps(jsonfile,ensure_ascii=False))
         # print(aa)
-        tk.messagebox.showinfo(title='土城長庚檢驗科', message="考片建立成功!!")
+        tk.messagebox.showinfo(title='檢驗醫學部(科)', message="考片建立成功!!")
 def main():  
     root = ctk.CTk()
     I = Import(root)
