@@ -1,3 +1,4 @@
+import sys,os
 import tkinter as tk
 import customtkinter  as ctk
 from tksheet import Sheet
@@ -18,21 +19,43 @@ from openpyxl import Workbook,load_workbook
 from openpyxl.styles import Font,Alignment,Border,Side,PatternFill
 from openpyxl.utils import get_column_letter,column_index_from_string
 from openpyxl.formatting.rule import Rule,CellIsRule,FormulaRule
+from openpyxl.workbook.properties import CalcProperties
 
+
+#為了解決包成onefile會出現讀不到子資料夾的情況，所以利用pyinstaller會先產生_MEIPASS的資料夾，將資料夾加入路徑中就可以使用了
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 #SQL連線設定
-connection_string = """DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=bloodtest;UID=sa;PWD=1234"""
+connection_string = """DRIVER={ODBC Driver 17 for SQL Server};SERVER=220.133.50.28;DATABASE=bloodtest;UID=cgmh;PWD=B[-!wYJ(E_i7Aj3r"""
 try:
     coxn = pyodbc.connect(connection_string)
-except pyodbc.OperationalError:
-    connection_string = "DRIVER={ODBC Driver 17 for SQL Server};SERVER=10.30.47.9;DATABASE=bloodtest;UID=henry423;PWD=1234"
+except pyodbc.InterfaceError:
+    # connection_string = "DRIVER={ODBC Driver 11 for SQL Server};SERVER=10.30.47.9;DATABASE=bloodtest;UID=henry423;PWD=1234"
+    connection_string = "DRIVER={SQL Server};SERVER=10.30.47.9;DATABASE=bloodtest;UID=henry423;PWD=1234"
 finally:
     coxn = pyodbc.connect(connection_string)
     connection_url = URL.create("mssql+pyodbc", query={"odbc_connect": connection_string})
     engine = create_engine(connection_url)
 ##讀取95 reference
-WB_95 = load_workbook("testdata\95.xlsx")
+WB_95 = load_workbook(resource_path("testdata\95.xlsx"))
 ws_95 = WB_95.worksheets[0]
+##建立95 的dataframe，後續需要計算後匯出saas用
+db_95 = pd.read_excel(resource_path("testdata\95.xlsx"))
+# 設定正確的欄位名稱
+db_95.columns = db_95.iloc[0]
+df_95 = db_95[1:]
+df_95.reset_index(drop=True, inplace=True)
+df_95.columns.name = None
+df_95.columns = ['n=', 'lower_100', 'upper_100', 'lower_200', 'upper_200', 'lower_500', 'upper_500', 'lower_1000', 'upper_1000', 'lower_10000', 'upper_10000']
+
 
 ##外邊框設置
 #ex: A3:D5 要外粗邊框
@@ -40,6 +63,7 @@ ws_95 = WB_95.worksheets[0]
 # D3:D5的right style = "medium"
 # A3:D3的top style = "medium"
 # A5:D5的bottom style = "medium"
+##設定外框線為粗邊框的函式
 def outter_border(worksheet,s_column, s_index, e_column , e_index,border_style):
     L_border = Border(left=Side(style=border_style),right=Side(style="thin"),top=Side(style="thin"),bottom=Side(style="thin"))
     R_border = Border(left=Side(style="thin"),right=Side(style=border_style),top=Side(style="thin"),bottom=Side(style="thin"))
@@ -67,8 +91,16 @@ def outter_border(worksheet,s_column, s_index, e_column , e_index,border_style):
     worksheet.cell(row=s_index, column=e_column_index).border = TR_border
     worksheet.cell(row=e_index, column=s_column_index).border = BL_border
     worksheet.cell(row=e_index, column=e_column_index).border = BR_border
-
-
+##參照95_db，計算百分比上下線的函式
+def percent_cal(cell_amount,cell_percent):
+    df_title_low = 'lower_%s'%(cell_amount) #根據匯入的n值，決定標題名稱
+    df_title_up = 'upper_%s'%(cell_amount)
+    cell_per_round = round(cell_percent,0)  #四捨五入百分比
+    flt = df_95["n="]==cell_per_round   #建立filter
+    lower = df_95.loc[flt,[df_title_low]].values[0][0]
+    upper = df_95.loc[flt,[df_title_up]].values[0][0]
+    # print(lower,upper)
+    return lower,upper
 
 class OUTPUT_SCORE:
 
@@ -87,7 +119,7 @@ class OUTPUT_SCORE:
         self.labelframe_1.grid(row=0, column=0, rowspan=2,sticky='nsew')
         self.labelframe_2 = ctk.CTkFrame(self.master,height=1200,fg_color="#FFEEDD",bg_color="#FFEEDD")
         self.labelframe_2.grid(row=0, column=1,sticky='nsew')
-        self.testicon = ctk.CTkImage(Image.open("assets\output.png"),size=(150,150))
+        self.testicon = ctk.CTkImage(Image.open(resource_path("assets\output.png")),size=(150,150))
         #匯入標題
         self.welcome = ctk.CTkLabel(
                     self.labelframe_1, 
@@ -292,10 +324,10 @@ WHERE [id].[院區]='%s';;"""%(h_site)
                 self.btn_rawexport.configure(state='normal')
                 self.btn_sasexport.configure(state='normal')
             else:
-                tk.messagebox.showerror(title='土城醫院檢驗科', message='請選擇年份!')
+                tk.messagebox.showerror(title='檢驗醫學部(科)', message='請選擇年份!')
                 return
         else:
-            tk.messagebox.showerror(title='土城醫院檢驗科', message='請選擇院區!所有院區請選擇ALL')
+            tk.messagebox.showerror(title='檢驗醫學部(科)', message='請選擇院區!所有院區請選擇ALL')
             return
         with coxn.cursor() as cursor:
             cursor.execute(srh)
@@ -354,10 +386,10 @@ JOIN [bloodtest].[dbo].[bloodinfo] ON [bloodinfo].[smear_id] = [test_data].[smea
 WHERE [id].[院區]='%s' AND [bloodinfo].[year]=%d;"""%(h_site,int(testyear))
                 file_name = "%d_%s_"%(int(testyear),h_site)
             else:
-                tk.messagebox.showerror(title='土城醫院檢驗科', message='請選擇年份!')
+                tk.messagebox.showerror(title='檢驗醫學部(科)', message='請選擇年份!')
                 return
         else:
-            tk.messagebox.showerror(title='土城醫院檢驗科', message='請選擇院區!所有院區請選擇ALL')
+            tk.messagebox.showerror(title='檢驗醫學部(科)', message='請選擇院區!所有院區請選擇ALL')
             return
         wb = Workbook()
         ws = wb.active
@@ -459,9 +491,9 @@ WHERE [id].[院區]='%s' AND [bloodinfo].[year]=%d;"""%(h_site,int(testyear))
         wb.save(file_name + "考生結果.xlsx")
         filepath = ".//%s考生結果.xlsx"%(file_name)
         if os.path.isfile(filepath):
-            tk.messagebox.showinfo(title='土城醫院檢驗科', message='檔案新增成功!')
+            tk.messagebox.showinfo(title='檢驗醫學部(科)', message='檔案新增成功!')
         else:
-            tk.messagebox.showerror(title='土城醫院檢驗科', message='檔案新增失敗QQ')
+            tk.messagebox.showerror(title='檢驗醫學部(科)', message='檔案新增失敗QQ')
 #########################################↑↑↑↑↑匯出考試結果: 包含考片正確答案，↑↑↑↑↑#########################################
 ##################↓↓↓↓↓匯出考生原始結果: 包含考片正確答案、院區、姓名、考片ID、考試次數、百分比、上下限↓↓↓↓↓##################
     def output_percent(self):
@@ -495,10 +527,10 @@ JOIN [bloodtest].[dbo].[bloodinfo] ON [bloodinfo].[smear_id] = [blood_final].[sm
 WHERE [id].[院區] = '%s' AND [bloodinfo].[year]=%d;"""%(h_site,int(testyear))
                 file_name = "%d_%s_"%(int(testyear),h_site)
             else:
-                tk.messagebox.showerror(title='土城醫院檢驗科', message='請選擇年份!')
+                tk.messagebox.showerror(title='檢驗醫學部(科)', message='請選擇年份!')
                 return
         else:
-            tk.messagebox.showerror(title='土城醫院檢驗科', message='請選擇院區!所有院區請選擇ALL')
+            tk.messagebox.showerror(title='檢驗醫學部(科)', message='請選擇院區!所有院區請選擇ALL')
             return
         with engine.begin() as conn:
             datadict2 = pd.read_sql_query(sa.text(get_ans), conn)
@@ -572,9 +604,9 @@ WHERE [id].[院區] = '%s' AND [bloodinfo].[year]=%d;"""%(h_site,int(testyear))
         wb.save(file_name + "考生原始成績.xlsx")
         filepath = ".//%s考生原始成績.xlsx"%(file_name)
         if os.path.isfile(filepath):
-            tk.messagebox.showinfo(title='土城醫院檢驗科', message='檔案新增成功!')
+            tk.messagebox.showinfo(title='檢驗醫學部(科)', message='檔案新增成功!')
         else:
-            tk.messagebox.showerror(title='土城醫院檢驗科', message='檔案新增失敗QQ')
+            tk.messagebox.showerror(title='檢驗醫學部(科)', message='檔案新增失敗QQ')
 ##################↑↑↑↑↑匯出考生原始結果: 包含考片正確答案、院區、姓名、考片ID、考試次數、百分比、上下限↑↑↑↑↑##################
 ##################↓↓↓↓↓匯出SAS↓↓↓↓↓##################
     def output_sas(self):
@@ -583,18 +615,9 @@ WHERE [id].[院區] = '%s' AND [bloodinfo].[year]=%d;"""%(h_site,int(testyear))
         if h_site !="":
             if h_site=="All":
                 get_sas = """SELECT [id].[院區],[id].[ac],[bloodinfo].[year],[blood_final].[smear_id],[blood_final].[count],[blood_final].[celltype],
-[blood_final].[matrix_value],[test_data].[must],[test_data].[mustnot],[test_data].[abn_lym],[test_data].[score]
-FROM [blood_final]
-JOIN [test_data] 
-ON [test_data].[test_id]=[blood_final].[test_id] 
-AND [test_data].[smear_id]=[blood_final].[smear_id] 
-AND [test_data].[count]=[blood_final].[count]
-JOIN [bloodtest].[dbo].[id] ON [id].[No] = [test_data].[test_id]
-JOIN [bloodtest].[dbo].[bloodinfo] ON [bloodinfo].[smear_id] = [test_data].[smear_id];"""
-                file_name = "All_"
-            elif testyear !="":
-                get_sas = """SELECT [id].[院區],[id].[ac],[bloodinfo].[year],[blood_final].[smear_id],[blood_final].[count],[blood_final].[celltype],
-[blood_final].[matrix_value],[test_data].[must],[test_data].[mustnot],[test_data].[abn_lym],[test_data].[score]
+[blood_final].[percent_value],[bloodinfo_ans2].[value],
+[blood_final].[matrix_value],[test_data].[must],[test_data].[mustnot],[test_data].[abn_lym],[test_data].[score],
+[blood_final].[timestamp]
 FROM [blood_final]
 JOIN [test_data] 
 ON [test_data].[test_id]=[blood_final].[test_id] 
@@ -602,31 +625,70 @@ AND [test_data].[smear_id]=[blood_final].[smear_id]
 AND [test_data].[count]=[blood_final].[count]
 JOIN [bloodtest].[dbo].[id] ON [id].[No] = [test_data].[test_id]
 JOIN [bloodtest].[dbo].[bloodinfo] ON [bloodinfo].[smear_id] = [test_data].[smear_id]
+JOIN [bloodtest].[dbo].[bloodinfo_ans2] ON [bloodinfo_ans2].[smear_id] = [test_data].[smear_id] AND [bloodinfo_ans2].[celltype] = [blood_final].[celltype];"""
+                file_name = "All_"
+            elif testyear !="":
+                get_sas = """SELECT [id].[院區],[id].[ac],[bloodinfo].[year],[blood_final].[smear_id],[blood_final].[count],[blood_final].[celltype],
+[blood_final].[percent_value],[bloodinfo_ans2].[value],
+[blood_final].[matrix_value],[test_data].[must],[test_data].[mustnot],[test_data].[abn_lym],[test_data].[score],
+[blood_final].[timestamp]
+FROM [blood_final]
+JOIN [test_data] 
+ON [test_data].[test_id]=[blood_final].[test_id] 
+AND [test_data].[smear_id]=[blood_final].[smear_id] 
+AND [test_data].[count]=[blood_final].[count]
+JOIN [bloodtest].[dbo].[id] ON [id].[No] = [test_data].[test_id]
+JOIN [bloodtest].[dbo].[bloodinfo] ON [bloodinfo].[smear_id] = [test_data].[smear_id]
+JOIN [bloodtest].[dbo].[bloodinfo_ans2] ON [bloodinfo_ans2].[smear_id] = [test_data].[smear_id] AND [bloodinfo_ans2].[celltype] = [blood_final].[celltype]
 WHERE [id].[院區]='%s' AND [bloodinfo].[year]=%d;"""%(h_site,int(testyear))
                 file_name = "%d_%s_"%(int(testyear),h_site)
             else:
-                tk.messagebox.showerror(title='土城醫院檢驗科', message='請選擇年份!')
+                tk.messagebox.showerror(title='檢驗醫學部(科)', message='請選擇年份!')
                 return
         else:
-            tk.messagebox.showerror(title='土城醫院檢驗科', message='請選擇院區!所有院區請選擇ALL')
+            tk.messagebox.showerror(title='檢驗醫學部(科)', message='請選擇院區!所有院區請選擇ALL')
             return
+        ##建立dict_細胞該數幾顆
+        get_id_countvalue = "SELECT [smear_id],[count_value] FROM [bloodinfo];"
+        with coxn.cursor() as cursor:
+                cursor.execute(get_id_countvalue)
+                id_countvalue = cursor.fetchall()
+        dict_id_countvalue= dict(id_countvalue)
+        # print(dict_id_countvalue)
+        ##建立xls
         wb = Workbook()
         ws = wb.active
         ws.title = "sheet1"
 
-        title = ["院區","姓名","年份","考片ID","count","celltype","matrix_value","must","mustnot","abn_lym","score"]
+        title = ["院區","姓名","年份","考片ID","count","celltype","cellpercent","ansvalue","matrix_value","must","mustnot","abn_lym","score","timestamp"]
         ws.append(title)
         with engine.begin() as conn:
             sas_data = pd.read_sql_query(sa.text(get_sas), conn)
         for i in range(0,len(sas_data)):
             ws.append(sas_data.iloc[i].to_list())
-
+        ##新增兩列[上限,下限]
+        ws.insert_cols(9,2)
+        ws["I1"] = 'percent_lower'
+        ws["J1"] = 'percent_upper'
+        for j in range(2,len(sas_data) + 2):
+            smear_id = ws["D" + str(j)].value
+            cell_per = ws["H" + str(j)].value
+            cell_count = dict_id_countvalue[smear_id]
+            if pd.isnull(cell_per) == True:
+                pass
+            else:
+                print(cell_per,cell_count)
+                cri_low,cri_high = percent_cal(cell_count,cell_per)
+                print(cri_low,cri_high)
+                ws["I" + str(j)].value = cri_low
+                ws["J" + str(j)].value = cri_high
+                # print(cell_per)
         wb.save(file_name + "SAS.xlsx")
         filepath = ".//%sSAS.xlsx"%(file_name)
         if os.path.isfile(filepath):
-            tk.messagebox.showinfo(title='土城醫院檢驗科', message='檔案新增成功!')
+            tk.messagebox.showinfo(title='檢驗醫學部(科)', message='檔案新增成功!')
         else:
-            tk.messagebox.showerror(title='土城醫院檢驗科', message='檔案新增失敗QQ')
+            tk.messagebox.showerror(title='檢驗醫學部(科)', message='檔案新增失敗QQ')
 ##################↑↑↑↑↑匯出SAS↑↑↑↑↑##################
 ##清除按鈕
     def clear(self):

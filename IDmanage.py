@@ -1,5 +1,5 @@
 #authorised by Henry Tsai
-import sys
+import sys,os
 import tkinter as tk
 from tkinter import simpledialog
 from tkinter import messagebox
@@ -9,17 +9,27 @@ from setuptools import Command
 from verifyAccount import addaccount_sql,delaccount,editaccount,changepw_sql
 from PIL import Image
 
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
 
-connection_string = """DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=bloodtest;UID=sa;PWD=1234"""
+    return os.path.join(base_path, relative_path)
+
+connection_string = """DRIVER={ODBC Driver 17 for SQL Server};SERVER=220.133.50.28;DATABASE=bloodtest;UID=cgmh;PWD=B[-!wYJ(E_i7Aj3r"""
 try:
     coxn = pyodbc.connect(connection_string)
-except pyodbc.OperationalError:
-    connection_string = "DRIVER={ODBC Driver 17 for SQL Server};SERVER=10.30.47.9;DATABASE=bloodtest;UID=henry423;PWD=1234"
+except pyodbc.InterfaceError:
+    # connection_string = "DRIVER={ODBC Driver 11 for SQL Server};SERVER=10.30.47.9;DATABASE=bloodtest;UID=henry423;PWD=1234"
+    connection_string = "DRIVER={SQL Server};SERVER=10.30.47.9;DATABASE=bloodtest;UID=henry423;PWD=1234"
 finally:
     coxn = pyodbc.connect(connection_string)
 ##擷取SQL ID table中有的院區
 with coxn.cursor() as cursor:
-    unique_hos = "SELECT DISTINCT [院區] FROM [bloodtest].[dbo].[id];"
+    unique_hos = "SELECT DISTINCT [院區] FROM [bloodtest].[dbo].[hospital_code];"
     cursor.execute(unique_hos)
     hos = cursor.fetchall()
 hos = [e[0] for e in hos]
@@ -47,7 +57,7 @@ class ID:
         self.labelframe_3 = ctk.CTkFrame(self.master,fg_color="#FFEEDD",bg_color="#FFEEDD")
         # self.labelframe_2.grid_columnconfigure(1, weight=1)
 ##左手邊功能區
-        self.people = ctk.CTkImage(Image.open("assets\person.png"),size=(160,120))
+        self.people = ctk.CTkImage(Image.open(resource_path("assets\person.png")),size=(160,120))
         self.label_1 = ctk.CTkLabel(
                     self.labelframe_1, 
                     image=self.people,
@@ -212,17 +222,17 @@ class ID:
         pw2 = self.input_pw2.get()
         ##檢查密碼是否重複
         if pw1 !=pw2:
-            tk.messagebox.showerror(title='土城醫院檢驗科', message='密碼兩次不一致，請重新輸入!')
+            tk.messagebox.showerror(title='檢驗醫學部(科)', message='密碼兩次不一致，請重新輸入!')
             self.input_pw.delete(0,tk.END)
             self.input_pw2.delete(0,tk.END)
             return None
         else:
             result = addaccount_sql(branch,account,pw1)
         if result =="duplicate":
-            tk.messagebox.showerror(title='土城醫院檢驗科', message='帳號重複!請重新輸入!')
+            tk.messagebox.showerror(title='檢驗醫學部(科)', message='帳號重複!請重新輸入!')
             self.clear()
         elif result =="success":
-            tk.messagebox.showinfo(title='土城醫院檢驗科', message='帳號建立成功!')
+            tk.messagebox.showinfo(title='檢驗醫學部(科)', message='帳號建立成功!')
             self.clear()
 ##(f3)修改/刪除帳號介面
     def changeedit(self):
@@ -346,7 +356,7 @@ class ID:
     def updatelist(self,event):
         branch = self.f3_input_branch.get()
         with coxn.cursor() as cursor:
-            query = "SELECT ac,pw  FROM [bloodtest].[dbo].[id] WHERE [院區]='%s';"%(branch)
+            query = "SELECT ac,pw  FROM [bloodtest].[dbo].[id] JOIN [bloodtest].[dbo].[hospital_code] ON [hospital_code].[code] = [id].[院區] WHERE [hospital_code].[院區]='%s';"%(branch)
             cursor.execute(query)
             acpw = dict(cursor.fetchall())
         # jsonfile = open('in.json','rb')
@@ -369,22 +379,22 @@ class ID:
         if self.toedit !="":
             self.input_ID2.configure(state='normal')
             tk.messagebox.showinfo(
-                title='土城醫院檢驗科', 
+                title='檢驗醫學部(科)', 
                 message="""請修改帳號框中帳號""")
             self.chgpw_btn.configure(state='normal')
         else:
-            tk.messagebox.showerror(title='土城醫院檢驗科', message="尚未選擇帳號!請選擇後再逕行修改!")
+            tk.messagebox.showerror(title='檢驗醫學部(科)', message="尚未選擇帳號!請選擇後再逕行修改!")
             return
     #(f3)修改帳號功能鍵
     def editac(self):
         editid = self.input_ID2.get()
         if editid !="":
-            if tk.messagebox.askyesno(title='土城醫院檢驗科', message='確認將%s修改為%s?'%(self.toedit,editid)):
+            if tk.messagebox.askyesno(title='檢驗醫學部(科)', message='確認將%s修改為%s?'%(self.toedit,editid)):
                 state = editaccount(self.toedit,editid)
             else:
                 return
             if state == "success":
-                tk.messagebox.showinfo(title='土城醫院檢驗科', message='修改成功!')
+                tk.messagebox.showinfo(title='檢驗醫學部(科)', message='修改成功!')
                 self.input_ID2.configure(state='normal')
                 self.input_ID2.delete(0,tk.END)
                 self.input_ID2.configure(state='disable')
@@ -392,9 +402,9 @@ class ID:
                 self.clearlist()
                 self.chgpw_btn.configure(state='disabled')
             else:
-                tk.messagebox.showerror(title='土城醫院檢驗科', message='發生未知錯誤，請聯絡管理員')
+                tk.messagebox.showerror(title='檢驗醫學部(科)', message='發生未知錯誤，請聯絡管理員')
         else:
-            tk.messagebox.showerror(title='土城醫院檢驗科', message='尚未選擇帳號!請選擇後再逕行修改!')
+            tk.messagebox.showerror(title='檢驗醫學部(科)', message='尚未選擇帳號!請選擇後再逕行修改!')
             return
     #(f3)點兩下密碼可以修改密碼
     def clicklabelpw(self,event):
@@ -407,10 +417,10 @@ class ID:
                 changeResult = changepw_sql(account=account,newpassword=newpw)
                 print(changeResult)
                 if changeResult == "success":
-                    tk.messagebox.showinfo(title='土城醫院檢驗科', message='修改成功!')
+                    tk.messagebox.showinfo(title='檢驗醫學部(科)', message='修改成功!')
                     self.newWindow.destroy() 
             else:
-                tk.messagebox.showinfo(title='土城醫院檢驗科', message='新密碼不一致，請重新輸入!')
+                tk.messagebox.showinfo(title='檢驗醫學部(科)', message='新密碼不一致，請重新輸入!')
                 self.input_newpw.delete(0,tk.END)
                 self.input_newpw2.delete(0,tk.END)
         #toplevel裡的取消鍵
@@ -435,19 +445,19 @@ class ID:
     #(f3)刪除帳號功能鍵
     def delac(self):
         id = self.input_ID2.get()
-        if tk.messagebox.askyesno(title='土城醫院檢驗科', message='確認刪除?'):
+        if tk.messagebox.askyesno(title='檢驗醫學部(科)', message='確認刪除?'):
             state = delaccount(id)
         else:
             return
         if state == "success":
-            tk.messagebox.showinfo(title='土城醫院檢驗科', message='刪除成功!')
+            tk.messagebox.showinfo(title='檢驗醫學部(科)', message='刪除成功!')
             self.input_ID2.configure(state='normal')
             self.input_ID2.delete(0,tk.END)
             self.input_ID2.configure(state='disable')
             self.input_pwe2.delete(0,tk.END)
             self.clearlist()
         else:
-            tk.messagebox.showerror(title='土城醫院檢驗科', message='發生未知錯誤，請聯絡管理員')
+            tk.messagebox.showerror(title='檢驗醫學部(科)', message='發生未知錯誤，請聯絡管理員')
     
 
     #(switch)從修改刪除帳號切回新增帳號

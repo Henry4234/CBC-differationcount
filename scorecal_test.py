@@ -1,3 +1,4 @@
+import sys,os
 import tkinter as tk
 import customtkinter  as ctk
 from tksheet import Sheet
@@ -7,11 +8,22 @@ from turtle import width
 import pandas as pd
 import pyodbc
 
-connection_string = """DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=bloodtest;UID=sa;PWD=1234"""
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+connection_string = """DRIVER={ODBC Driver 17 for SQL Server};SERVER=220.133.50.28;DATABASE=bloodtest;UID=cgmh;PWD=B[-!wYJ(E_i7Aj3r"""
 try:
     coxn = pyodbc.connect(connection_string)
-except pyodbc.OperationalError:
-    connection_string = "DRIVER={ODBC Driver 17 for SQL Server};SERVER=10.30.47.9;DATABASE=bloodtest;UID=henry423;PWD=1234"
+except pyodbc.InterfaceError:
+    # connection_string = "DRIVER={ODBC Driver 11 for SQL Server};SERVER=10.30.47.9;DATABASE=bloodtest;UID=henry423;PWD=1234"
+    connection_string = "DRIVER={SQL Server};SERVER=10.30.47.9;DATABASE=bloodtest;UID=henry423;PWD=1234"
 finally:
     coxn = pyodbc.connect(connection_string)
 
@@ -35,7 +47,7 @@ class SCORE_TEST:
         self.master.title("考題成績試算")
         self.master.geometry("1600x850")
         self.master.config(background='#FFEEDD')
-        filename = "./chart/rangechart.json"
+        filename = resource_path("./chart/rangechart.json")
         self.rangechart = pd.read_json(filename)
         # jsonfile = open('testdata\data_new.json','rb')
         # rawdata = json.load(jsonfile)
@@ -362,7 +374,7 @@ class SCORE_TEST:
         if int(amount) == 100 or int(amount) == 200 or int(amount) == 500 :
             pass
         else:
-            tk.messagebox.showerror(title='土城醫院檢驗科', message='請在計算細胞量中輸入數字!\n請輸入100/200/500!')
+            tk.messagebox.showerror(title='檢驗醫學部(科)', message='請在計算細胞量中輸入數字!\n請輸入100/200/500!')
             self.input_N.delete(0,tk.END)
             return False            
         for value in entrylst:
@@ -370,7 +382,7 @@ class SCORE_TEST:
             try:
                 float(val)
             except ValueError:
-                tk.messagebox.showerror(title='土城醫院檢驗科', message='請在細胞百分比中輸入數字!')
+                tk.messagebox.showerror(title='檢驗醫學部(科)', message='請在細胞百分比中輸入數字!')
                 return False
         #檢查_是否百分比的部分加起來為100
         tal = 0
@@ -380,7 +392,7 @@ class SCORE_TEST:
             try:
                 float(val)
             except ValueError:
-                tk.messagebox.showerror(title='土城醫院檢驗科', message='''請在細胞百分比中輸入數字!
+                tk.messagebox.showerror(title='檢驗醫學部(科)', message='''請在細胞百分比中輸入數字!
 如果沒有此細胞請填0''')
                 return False
             val = int(val)
@@ -390,7 +402,7 @@ class SCORE_TEST:
         tal_lst.pop(2)
         tal = sum(tal_lst)
         if tal != 100:
-            tk.messagebox.showerror(title='土城醫院檢驗科', message='解答百分比加總不為100，請重新輸入!')
+            tk.messagebox.showerror(title='檢驗醫學部(科)', message='解答百分比加總不為100，請重新輸入!')
         # print(tal)
             return False
     #檢查輸入資料_chkbox上下不可同時勾取
@@ -406,7 +418,7 @@ class SCORE_TEST:
         # print(l_1,self.mustnotlst)
         for i in range(0,len(self.mustlst)):
             if self.mustlst[i] + self.mustnotlst[i] >=2:
-                tk.messagebox.showerror(title='土城醫院檢驗科', message='勾選重複!請勿重複勾選!')
+                tk.messagebox.showerror(title='檢驗醫學部(科)', message='勾選重複!請勿重複勾選!')
                 return False
             else:
                 pass
@@ -533,7 +545,7 @@ class SCORE_TEST:
             final_score=0
         else:
             pass
-        tk.messagebox.showinfo(title='土城醫院檢驗科', message="""已完成計算!
+        tk.messagebox.showinfo(title='檢驗醫學部(科)', message="""已完成計算!
 必須打到細胞檢查: %s
 不可打到細胞檢查: %s
 plasmacell+abn-Lym(空白表示不需檢查):%s

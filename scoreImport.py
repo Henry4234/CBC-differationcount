@@ -1,4 +1,4 @@
-import os,shutil
+import sys, os,shutil
 import tkinter as tk
 from tkinter import ttk
 from tkinter import RIDGE, DoubleVar, StringVar, ttk, messagebox,IntVar, filedialog
@@ -14,26 +14,41 @@ def getaccount(acount):
     # print(Baccount)
     return None
 
-connection_string = """DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=bloodtest;UID=sa;PWD=1234"""
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+connection_string = """DRIVER={ODBC Driver 17 for SQL Server};SERVER=220.133.50.28;DATABASE=bloodtest;UID=cgmh;PWD=B[-!wYJ(E_i7Aj3r"""
 try:
     coxn = pyodbc.connect(connection_string)
-except pyodbc.OperationalError:
-    connection_string = "DRIVER={ODBC Driver 17 for SQL Server};SERVER=10.30.47.9;DATABASE=bloodtest;UID=henry423;PWD=1234"
+except pyodbc.InterfaceError:
+    # connection_string = "DRIVER={ODBC Driver 11 for SQL Server};SERVER=10.30.47.9;DATABASE=bloodtest;UID=henry423;PWD=1234"
+    connection_string = "DRIVER={SQL Server};SERVER=10.30.47.9;DATABASE=bloodtest;UID=henry423;PWD=1234"
 finally:
     coxn = pyodbc.connect(connection_string)
 
 ####年份跟ID####
-with coxn.cursor() as cursor:
-    cursor.execute('SELECT "year","smear_id" FROM [bloodtest].[dbo].[bloodinfo];')
-    sql_yearid = cursor.fetchall()
-yearid = dict()
-for row in sql_yearid:
-    sql_year, smear_id = row
-    sql_year = str(sql_year)
-    if sql_year not in yearid:
-        yearid[sql_year] = []
-    yearid[sql_year].append(smear_id)
+def get_year_id():  
+    global yearid
+    yearid = dict()
+    with coxn.cursor() as cursor:
+        cursor.execute('SELECT "year","smear_id" FROM [bloodtest].[dbo].[bloodinfo];')
+        sql_yearid = cursor.fetchall()
 
+    for row in sql_yearid:
+        sql_year, smear_id = row
+        sql_year = str(sql_year)
+        if sql_year not in yearid:
+            yearid[sql_year] = []
+        yearid[sql_year].append(smear_id)
+    print(yearid)
+get_year_id()
 ##ctk無法有效支援treeview，所以使用entery + loop解決
 global entrylst
 entrylst = []
@@ -171,10 +186,10 @@ class Import:
         # self.labelframe_ok.place(relx=0.5,rely=0.5,anchor=tk.CENTER)
         
         # 匯入excel照片及建立tab中按鈕
-        self.excel = ctk.CTkImage(Image.open("assets\logoexcel.png"),size=(40,40))
-        self.correctcheck = ctk.CTkImage(Image.open("assets\check.png"),size=(60,60))
-        self.wrongcheck = ctk.CTkImage(Image.open("assets\\ncheck.png"),size=(60,60))
-        self.dbimage = ctk.CTkImage(Image.open("assets\logodb.png"),size=(80,80))
+        self.excel = ctk.CTkImage(Image.open(resource_path("assets\logoexcel.png")),size=(40,40))
+        self.correctcheck = ctk.CTkImage(Image.open(resource_path("assets\check.png")),size=(60,60))
+        self.wrongcheck = ctk.CTkImage(Image.open(resource_path("assets\\ncheck.png")),size=(60,60))
+        self.dbimage = ctk.CTkImage(Image.open(resource_path("assets\logodb.png")),size=(80,80))
         self.btn_1 = ctk.CTkButton(
             self.labelframe_1,
             text="請選擇檔案...",
@@ -705,14 +720,14 @@ class Import:
         ##                                        ┌rawdata = ["WBC","RBC",...]
         ##merge成一個list:verify，然後比對傳入資料┤
         ##                                        └rawdata_a = ["plasma cell","abnormal lympho"]
-        verify = ["WBC","RBC","HB","Hct","MCV","MCH","MCHC","RDW","Plt","plasma cell","abnormal lympho","megakaryocyte","nRBC","blast","metamyelocyte","eosinopil","plasmacytoid","promonocyte","promyelocyte","band neutropil","basopil","atypical lymphocyte","hypersegmented neutrophil","myelocyte","segmented neutrophil","lymphocyte","monocyte"]
+        verify = ["WBC","RBC","HB","Hct","MCV","MCH","MCHC","RDW","Plt","plasma cell","abnormal lympho","megakaryocyte","nRBC","blast","metamyelocyte","eosinophil","plasmacytoid","promonocyte","promyelocyte","band neutropil","basopil","atypical lymphocyte","hypersegmented neutrophil","myelocyte","segmented neutrophil","lymphocyte","monocyte"]
         # print(verify)
         ##對比是否有重複值在JSON內        
         if self.testyear in yearid:
-            if self.testname in yearid[self.testyear]:
-                self.labelframe_vfnok.place(relx=0.49,rely=0.42,anchor=tk.CENTER)
+            if str(self.testname) in yearid[self.testyear]:
+                self.labelframe_vfnok.place(relx=0.49,rely=0.54,anchor=tk.CENTER)
                 self.labelframe_vfnok.tkraise()
-                tk.messagebox.showerror(title='土城長庚檢驗科', message="檔案重複!請檢查檔案後重新輸入!!")
+                tk.messagebox.showerror(title='檢驗醫學部(科)', message="檔案重複!請檢查檔案後重新輸入!!")
                 return None
         else:
             pass
@@ -720,9 +735,9 @@ class Import:
         try:
             itemcompair = self.df["項目"]
         except KeyError:
-            self.labelframe_vfnok.place(relx=0.49,rely=0.42,anchor=tk.CENTER)
+            self.labelframe_vfnok.place(relx=0.49,rely=0.54,anchor=tk.CENTER)
             self.labelframe_vfnok.tkraise()
-            tk.messagebox.showerror(title='土城長庚檢驗科', message="檔案錯誤!請檢查檔案後重新輸入!!")
+            tk.messagebox.showerror(title='檢驗醫學部(科)', message="檔案錯誤!請檢查檔案後重新輸入!!")
             return
         # print(itemcompair)
         self.verifyframe.pack_forget()
@@ -731,21 +746,28 @@ class Import:
             if itemcompair[j] == verify[j]:
                 continue
             else:
-                self.labelframe_vfnok.place(relx=0.49,rely=0.42,anchor=tk.CENTER)
+                print(itemcompair[j],verify[j])
+                self.labelframe_vfnok.place(relx=0.49,rely=0.54,anchor=tk.CENTER)
                 self.labelframe_vfnok.tkraise()
-                tk.messagebox.showerror(title='土城長庚檢驗科', message="檔案錯誤!請檢查檔案後重新輸入!!")
+                tk.messagebox.showerror(title='檢驗醫學部(科)', message="檔案錯誤!請檢查檔案後重新輸入!!")
                 return None
         ##還要驗證加起來是否100 跟 must & mustnot有沒有打架
         v_db = self.df.drop([i for i in range(0,9)])
         # print(v_db)
         #加總100
         sum_val = v_db["數值"].sum()
+        #要排除兩個不受百分比約束的細胞(nRBC & megakaryocyte)
+        flter_nrbc = (v_db['項目'] == 'nRBC')
+        flter_mega = (v_db['項目'] == 'megakaryocyte')
+        exclude = v_db[flter_nrbc | flter_mega]["數值"].sum()
+        # print(exclude)
+        sum_val = sum_val - exclude
         if round(sum_val) < 101 and round(sum_val) >= 99:
             pass
         else:
-            self.labelframe_vfnok.place(relx=0.49,rely=0.42,anchor=tk.CENTER)
+            self.labelframe_vfnok.place(relx=0.49,rely=0.54,anchor=tk.CENTER)
             self.labelframe_vfnok.tkraise()
-            tk.messagebox.showerror(title='土城長庚檢驗科', message="細胞加總非100!請檢查檔案後重新輸入!!")
+            tk.messagebox.showerror(title='檢驗醫學部(科)', message="細胞加總非100!請檢查檔案後重新輸入!!")
             return None
         #must/mustnot檢查
         must_lst = v_db["must"].tolist()
@@ -754,9 +776,9 @@ class Import:
             if must_lst[j] != mustnot_lst[j] or must_lst[j]==0 and mustnot_lst[j]==0:
                 continue
             else:
-                self.labelframe_vfnok.place(relx=0.49,rely=0.42,anchor=tk.CENTER)
+                self.labelframe_vfnok.place(relx=0.49,rely=0.54,anchor=tk.CENTER)
                 self.labelframe_vfnok.tkraise()
-                tk.messagebox.showerror(title='土城長庚檢驗科', message="不可同時存在must/mustnot!請檢查檔案後重新輸入!!")
+                tk.messagebox.showerror(title='檢驗醫學部(科)', message="不可同時存在must/mustnot!請檢查檔案後重新輸入!!")
                 return None
         self.labelframe_vfok.pack()
         self.labelframe_vfok.place(relx=0.49,rely=0.54,anchor=tk.CENTER)
@@ -766,14 +788,14 @@ class Import:
     def download_file(self):
         dl_path = filedialog.askdirectory()
         if dl_path:
-            template="testdata\\template_CBCDATA.xlsx"
+            template=resource_path("testdata\\template_CBCDATA.xlsx")
             # template = template.replace("\\","/")
             destination_path = os.path.join(dl_path, "template_CBCDATA.xlsx")
             try:
                 shutil.copy(template, destination_path)
-                tk.messagebox.showinfo(title='土城醫院檢驗科', message=f"文件已成功保存到 {destination_path}")
+                tk.messagebox.showinfo(title='檢驗醫學部(科)', message=f"文件已成功保存到 {destination_path}")
             except Exception as e:
-                tk.messagebox.showerror(title='土城醫院檢驗科', message=f"保存文件时出错：{e}")
+                tk.messagebox.showerror(title='檢驗醫學部(科)', message=f"保存文件時出錯：{e}")
         else:
             return
     ##返回basdesk按鈕    
@@ -811,6 +833,9 @@ class Import:
             self.btn_6.configure(state="disabled")
         except AttributeError:
             pass
+        self.updatetojson_btn.configure(state="disabled")
+        #更新dict_yearid
+        get_year_id()
     ##(X)更新至JSON
     ##(O)更新至SQL
         #要更新3個table:["bloodinfo","bloodinfo_cbc","bloodinfo_ans"]
@@ -879,7 +904,7 @@ class Import:
         # aa.truncate()   ##清空JSON檔案
         # aa.write(json.dumps(jsonfile,ensure_ascii=False))
         # print(aa)
-        tk.messagebox.showinfo(title='土城長庚檢驗科', message="考片建立成功!!")
+        tk.messagebox.showinfo(title='檢驗醫學部(科)', message="考片建立成功!!")
 def main():  
     root = ctk.CTk()
     I = Import(root)

@@ -1,6 +1,5 @@
 #authorised by Henry Tsai
-import pickle
-import subprocess
+import sys,os
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import font
@@ -8,6 +7,16 @@ from typing import Sized
 import customtkinter  as ctk
 import verifyAccount
 import basedesk, basedesk_admin
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 class Login:    #建立登入介面  
     
@@ -20,15 +29,25 @@ class Login:    #建立登入介面
         ctk.set_default_color_theme("dark-blue")  
         #設定字型
         # 給主視窗設定標題內容  
-        self.master.title("土城醫院檢驗科")  
+        self.master.title("檢驗醫學部(科)")  
         self.master.geometry('600x400')
         self.master.config(background='#323232')
         # self.account_2 = None
         self.master.bind('<Return>', self.callback)
+        ####################取得連線IP####################
+        # 分割字符串
+        parts = verifyAccount.connection_string.split(";")
+        # 找到包含SERVER的部分
+        server_part = [part for part in parts if "SERVER=" in part][0]
+        # 从SERVER部分提取IP地址
+        server_ip = server_part.split("=")[1]
+        self.ip = ctk.StringVar()
+        self.ip.set(server_ip)
+        ####################取得連線IP####################
         #建立圖片
         self.canvas = tk.Canvas(self.master, height=56, width=379,background="#323232",highlightthickness=0)#建立畫布
         # self.canvas.comfig(highlightthickness=0)  
-        self.image_file = tk.PhotoImage(file='assets\logo.png')#載入圖片檔案  
+        self.image_file = tk.PhotoImage(file = resource_path('assets\logo.png'))#載入圖片檔案  
         self.image = self.canvas.create_image(0,0, anchor='nw', image=self.image_file)#將圖片置於畫布上  
         self.canvas.pack(side='top')#放置畫布（為上端）  
         #建立標題
@@ -45,7 +64,23 @@ class Login:    #建立登入介面
             text='@Design by Henry Tsai',
             text_color="#8E8E8E",
             font=("Calibri",12),
-            width=170)  
+            width=170)
+        self.label_ip = ctk.CTkLabel(
+            self.master, 
+            fg_color="#323232",
+            text='SQL Server IP:',
+            text_color="#8E8E8E",
+            font=("Calibri",12),
+            bg_color="#323232"
+            )
+        self.var_ip = ctk.CTkLabel(
+            self.master, 
+            fg_color="#323232",
+            textvariable=self.ip,
+            text_color="#8E8E8E",
+            font=("Calibri",12),
+            bg_color="#323232"
+            )
         # 建立一個密碼輸入框,並設定尺寸  
         self.input_password = ctk.CTkEntry(self.master, show='*', bg_color="#323232",height=30, width=120)  
         # 建立一個登入系統的按鈕  
@@ -65,6 +100,8 @@ class Login:    #建立登入介面
         self.login_button.place(relx=0.4, rely=0.9, anchor=tk.CENTER)  
         self.exit_button.place(relx=0.6, rely=0.9, anchor=tk.CENTER)
         self.cc.place(relx=1, rely=1,anchor=tk.SE)
+        self.label_ip.place(relx=0, rely=1,anchor=tk.SW)
+        self.var_ip.place(relx=0.125, rely=1,anchor=tk.SW)
         
     # 退出介面  
     def exit_interface(self):  
@@ -84,24 +121,24 @@ class Login:    #建立登入介面
         #對賬戶資訊進行驗證，普通使用者返回user，管理員返回master，賬戶錯誤返回noAccount，密碼錯誤返回noPassword  
         verifyResult = verifyAccount.verifyAccountData_sql(account,password)  
         if verifyResult=='master':  
-            tk.messagebox.showinfo(title='土城醫院檢驗科', message='進入管理介面')
+            tk.messagebox.showinfo(title='檢驗醫學部(科)', message='進入管理介面')
             self.input_account.delete(0,tk.END)
             self.input_password.delete(0,tk.END)
             self.loginuseradmin()
         elif verifyResult=='user':  
-            tk.messagebox.showinfo(title='土城醫院檢驗科', message='進入使用者介面')
+            tk.messagebox.showinfo(title='檢驗醫學部(科)', message='進入使用者介面')
             self.input_account.delete(0,tk.END)
             self.input_password.delete(0,tk.END)
             self.loginuser()   
         elif verifyResult=='noAccount':  
-            tk.messagebox.showinfo(title='土城醫院檢驗科', message='該賬號不存在請重新輸入!')
+            tk.messagebox.showinfo(title='檢驗醫學部(科)', message='該賬號不存在請重新輸入!')
             self.input_account.delete(0,tk.END)
             self.input_password.delete(0,tk.END)
         elif verifyResult=='noPassword':  
-            tk.messagebox.showinfo(title='土城醫院檢驗科', message='賬號/密碼錯誤請重新輸入!')
+            tk.messagebox.showinfo(title='檢驗醫學部(科)', message='賬號/密碼錯誤請重新輸入!')
             self.input_password.delete(0,tk.END)
         elif verifyResult=='empty':
-            tk.messagebox.showinfo(title='土城醫院檢驗科', message='未輸入賬號/密碼!')
+            tk.messagebox.showinfo(title='檢驗醫學部(科)', message='未輸入賬號/密碼!')
     def callback(self, event):  #按Enter鍵自動連結登入
         self.backstage_interface()
     def loginuser(self):

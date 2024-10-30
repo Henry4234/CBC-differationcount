@@ -1,5 +1,5 @@
 #authorised by Henry Tsai
-import sys
+import sys,os
 import tkinter as tk
 import pandas as pd
 from tkinter import IntVar, simpledialog,messagebox,DoubleVar,StringVar
@@ -15,16 +15,27 @@ import sqlalchemy as sa
 
 import pyodbc
 #建立與mySQL連線資料
-connection_string = """DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=bloodtest;UID=sa;PWD=1234"""
+connection_string = """DRIVER={ODBC Driver 17 for SQL Server};SERVER=220.133.50.28;DATABASE=bloodtest;UID=cgmh;PWD=B[-!wYJ(E_i7Aj3r"""
 try:
     coxn = pyodbc.connect(connection_string)
-except pyodbc.OperationalError:
-    connection_string = "DRIVER={ODBC Driver 17 for SQL Server};SERVER=10.30.47.9;DATABASE=bloodtest;UID=henry423;PWD=1234"
+except pyodbc.InterfaceError:
+    # connection_string = "DRIVER={ODBC Driver 11 for SQL Server};SERVER=10.30.47.9;DATABASE=bloodtest;UID=henry423;PWD=1234"
+    connection_string = "DRIVER={SQL Server};SERVER=10.30.47.9;DATABASE=bloodtest;UID=henry423;PWD=1234"
 finally:
     coxn = pyodbc.connect(connection_string)
 
 connection_url = URL.create("mssql+pyodbc", query={"odbc_connect": connection_string})
 engine = create_engine(connection_url)
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 class Modify:
     
@@ -54,10 +65,10 @@ class Modify:
         self.labelframe_2 = ctk.CTkFrame(self.master,fg_color="#FFEEDD",bg_color="#FFEEDD")
         self.labelframe_2.grid(row=0, column=1)
         self.frame_2s = ctk.CTkFrame(self.labelframe_2,fg_color="#FFEEDD",bg_color="#FFEEDD")
-        self.frame_2s.grid(row=2, column=2,columnspan=3,rowspan=4,)
+        self.frame_2s.grid(row=2, column=2,columnspan=3,rowspan=3)
         self.labelframe_3 = ctk.CTkFrame(self.master,fg_color="#FFEEDD",bg_color="#FFEEDD")
         self.frame_3s = ctk.CTkFrame(self.labelframe_3,fg_color="#FFEEDD",bg_color="#FFEEDD")
-        self.frame_3s.grid(row=2, column=2,columnspan=3,rowspan=4,padx=20)
+        self.frame_3s.grid(row=2, column=2,columnspan=3,rowspan=3,padx=20)
         self.labelframe_4 = ctk.CTkFrame(self.master,fg_color="#FFEEDD",bg_color="#FFEEDD")
         # self.labelframe_2.grid_columnconfigure(1, weight=1)
         ##data格式(包含CBC資訊跟答案)
@@ -99,7 +110,7 @@ class Modify:
             "comment": StringVar(),
         }
         ##左手邊功能區
-        self.people = ctk.CTkImage(Image.open("assets\pages.png"),size=(120,120))
+        self.people = ctk.CTkImage(Image.open(resource_path("assets\pages.png")),size=(120,120))
         self.label_1 = ctk.CTkLabel(
                     self.labelframe_1, 
                     image=self.people,
@@ -356,7 +367,7 @@ class Modify:
         self.modifytable_comment_val.grid(row = 4, column = 3,rowspan=5,sticky='n')
         self.modifytable_comment_val.configure(state="disabled")
         entrylst.append(self.modifytable_comment_val)
-        #(f2)編輯/確認/清除按鈕
+        #(f2)編輯/確認/清除/刪除考片按鈕
         self.edit_btn = ctk.CTkButton(
             self.labelframe_2,
             text = "編輯",
@@ -382,6 +393,14 @@ class Modify:
             fg_color='#FF9900',
             text_color='#000000')
         self.clear_btn.grid(row=4,column=4,padx=20,pady=15)
+        self.delete_btn = ctk.CTkButton(
+            self.labelframe_2,
+            text = "刪除考片",
+            command=self.delete,
+            height=30,
+            fg_color='#FF0000',
+            text_color='#000000')
+        self.delete_btn.grid(row=5,column=4,padx=20,pady=5)
 
 ##左手邊按鍵區域 血液考題設定/血液參數設定/尿液考題設定/離開
     #(f3)參數設定介面介面
@@ -600,6 +619,14 @@ class Modify:
             fg_color='#FF9900',
             text_color='#000000')
         self.f3_clear_btn.grid(row=4,column=4,padx=20,pady=15)
+        self.f3_delete_btn = ctk.CTkButton(
+            self.labelframe_3,
+            text = "刪除考片",
+            command=self.f3_delete,
+            height=30,
+            fg_color='#FF0000',
+            text_color='#000000')
+        self.f3_delete_btn.grid(row=5,column=4,padx=20,pady=5)
 
     #(f1)離開
     def exit(self,oldmaster):
@@ -616,13 +643,13 @@ class Modify:
         self.focusyear = self.input_year.get()
         idx = self.test_listbox.curselection()
         if self.focusyear=="" :
-            tk.messagebox.showerror(title="土城醫院檢驗科",message="尚未選擇年份!!請選擇後再開始編輯!")
+            tk.messagebox.showerror(title="檢驗醫學部(科)",message="尚未選擇年份!!請選擇後再開始編輯!")
             return
         elif idx ==():
-            tk.messagebox.showerror(title="土城醫院檢驗科",message="尚未選擇考片!!請選擇後再開始編輯!")
+            tk.messagebox.showerror(title="檢驗醫學部(科)",message="尚未選擇考片!!請選擇後再開始編輯!")
             return
         else:
-            if tk.messagebox.askyesno(title='土城醫院檢驗科', message='確定編輯?'):    
+            if tk.messagebox.askyesno(title='檢驗醫學部(科)', message='確定編輯?'):    
                 self.focustest = self.test_listbox.get(idx)
                 #鎖住combobox & listbox不要選到其他的考片
                 self.input_year.configure(state="disabled")
@@ -637,7 +664,7 @@ class Modify:
                 return
     #(f2)確定
     def editdata(self):
-        if tk.messagebox.askyesno(title='土城醫院檢驗科', message='改完了?'):
+        if tk.messagebox.askyesno(title='檢驗醫學部(科)', message='改完了?'):
             # i = self.rawdata.index
             #年份跟ID做為filter
             # filter1 = (self.rawdata['year'] == self.focusyear)
@@ -676,7 +703,7 @@ class Modify:
             # with open('testdata/data_new.json','w',encoding='utf8') as r:
             #     json.dump(a,r,ensure_ascii=False)
             #     r.close()
-            tk.messagebox.showinfo(title='土城醫院檢驗科', message='修改成功!')
+            tk.messagebox.showinfo(title='檢驗醫學部(科)', message='修改成功!')
             self.input_year.configure(state="normal")
             self.test_listbox.configure(state="normal")
             self.yes_btn.configure(state="disabled")
@@ -686,7 +713,7 @@ class Modify:
             return
     #(f2)清除
     def clear(self):
-        if tk.messagebox.askyesno(title='土城醫院檢驗科', message='確定清除?'):
+        if tk.messagebox.askyesno(title='檢驗醫學部(科)', message='確定清除?'):
             self.input_year.set("")
             self.test_listbox.delete(0,tk.END)
             for value in self.testinfo.values():
@@ -697,6 +724,33 @@ class Modify:
             self.modifytable_comment_val.configure(state='disable')
         else:
             return
+    #(f2)刪除
+    def delete(self):
+        #取得考片ID
+        self.focusyear = self.input_year.get()
+        idx = self.test_listbox.curselection()
+        if self.focusyear=="" :
+            tk.messagebox.showerror(title="檢驗醫學部(科)",message="尚未選擇年份!!請選擇後再刪除!")
+            return
+        elif idx ==():
+            tk.messagebox.showerror(title="檢驗醫學部(科)",message="尚未選擇考片!!請選擇後再刪除!")
+            return
+        else:
+            self.focustest = self.test_listbox.get(idx)
+            if tk.messagebox.askyesno(title='檢驗醫學部(科)', message="""確定刪除以下考片?
+年份:%s
+考片編號:%s"""%(self.focusyear,self.focustest)):    
+                #鎖住combobox & listbox不要選到其他的考片
+                self.input_year.configure(state="disabled")
+                self.test_listbox.configure(state="disabled")
+                with coxn.cursor() as cursor:
+                    cursor.execute("DELETE FROM bloodinfo WHERE smear_id = '%s';"%(self.focustest))
+                self.input_year.configure(state="normal")
+                self.test_listbox.configure(state="normal")
+                self.updatelist(None)
+                tk.messagebox.showinfo(title="檢驗醫學部(科)",message="考片刪除成功!")
+            else:
+                return
 ##(f2)事件連結
     #選擇年份之後，更新listbox(JSON裡面有的考題)
     def updatelist(self,event):
@@ -777,13 +831,13 @@ class Modify:
         self.focusyear = self.f3_input_year.get()
         idx = self.f3_test_listbox.curselection()
         if self.focusyear=="" :
-            tk.messagebox.showerror(title="土城醫院檢驗科",message="尚未選擇年份!!請選擇後再開始編輯!")
+            tk.messagebox.showerror(title="檢驗醫學部(科)",message="尚未選擇年份!!請選擇後再開始編輯!")
             return
         elif idx ==():
-            tk.messagebox.showerror(title="土城醫院檢驗科",message="尚未選擇考片!!請選擇後再開始編輯!")
+            tk.messagebox.showerror(title="檢驗醫學部(科)",message="尚未選擇考片!!請選擇後再開始編輯!")
             return
         else:
-            if tk.messagebox.askyesno(title='土城醫院檢驗科', message='確定編輯?'):    
+            if tk.messagebox.askyesno(title='檢驗醫學部(科)', message='確定編輯?'):    
                 self.focustest = self.f3_test_listbox.get(idx)
                 #鎖住combobox & listbox不要選到其他的考片
                 self.f3_input_year.configure(state="disabled")
@@ -800,7 +854,7 @@ class Modify:
                 return
     #(f3)確定
     def f3_editdata(self):
-        if tk.messagebox.askyesno(title='土城醫院檢驗科', message='改完了?'):
+        if tk.messagebox.askyesno(title='檢驗醫學部(科)', message='改完了?'):
             # i = self.rawdata.index
             # #年份跟ID做為filter
             # filter1 = (self.rawdata['year'] == self.focusyear)
@@ -845,7 +899,7 @@ class Modify:
             # with open('testdata/data_new.json','w',encoding='utf8') as r:
             #     json.dump(a,r,ensure_ascii=False)
             #     r.close()
-            tk.messagebox.showinfo(title='土城醫院檢驗科', message='修改成功!')
+            tk.messagebox.showinfo(title='檢驗醫學部(科)', message='修改成功!')
             self.f3_input_year.configure(state="normal")
             self.f3_test_listbox.configure(state="normal")
             self.f3_yes_btn.configure(state="disabled")
@@ -859,7 +913,7 @@ class Modify:
             return
     #(f3)清除
     def f3_clear(self):
-        if tk.messagebox.askyesno(title='土城醫院檢驗科', message='確定清除?'):
+        if tk.messagebox.askyesno(title='檢驗醫學部(科)', message='確定清除?'):
             self.f3_input_year.set("")
             self.f3_test_listbox.delete(0,tk.END)
             for values in self.ansinfo.values():
@@ -867,6 +921,33 @@ class Modify:
                     value.set(0)
         else:
             return
+    #(f3)刪除考片
+    def f3_delete(self):
+        #取得考片ID
+        self.focusyear = self.f3_input_year.get()
+        idx = self.f3_test_listbox.curselection()
+        if self.focusyear=="" :
+            tk.messagebox.showerror(title="檢驗醫學部(科)",message="尚未選擇年份!!請選擇後再刪除!")
+            return
+        elif idx ==():
+            tk.messagebox.showerror(title="檢驗醫學部(科)",message="尚未選擇考片!!請選擇後再刪除!")
+            return
+        else:
+            self.focustest = self.f3_test_listbox.get(idx)
+            if tk.messagebox.askyesno(title='檢驗醫學部(科)', message="""確定刪除以下考片?
+年份:%s
+考片編號:%s"""%(self.focusyear,self.focustest)):    
+                #鎖住combobox & listbox不要選到其他的考片
+                self.f3_input_year.configure(state="disabled")
+                self.f3_test_listbox.configure(state="disabled")
+                with coxn.cursor() as cursor:
+                    cursor.execute("DELETE FROM bloodinfo WHERE smear_id = '%s';"%(self.focustest))
+                self.f3_input_year.configure(state="normal")
+                self.f3_test_listbox.configure(state="normal")
+                self.f3_updatelist(None)
+                tk.messagebox.showinfo(title="檢驗醫學部(科)",message="考片刪除成功!")
+            else:
+                return
 ##(f3)事件連結
     #(f3)選擇年份之後，更新listbox(JSON裡面有的考題)
     def f3_updatelist(self,event):

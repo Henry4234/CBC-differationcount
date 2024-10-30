@@ -1,3 +1,4 @@
+import sys,os,math
 import tkinter as tk
 import pandas as pd
 from tkinter import RIDGE, DoubleVar, StringVar, ttk, messagebox,IntVar
@@ -19,12 +20,24 @@ def getaccount(acount):
     # Baccount = "henry423"
     print(Baccount)
     return None
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
 ###sql連線設定
-connection_string = """DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=bloodtest;UID=sa;PWD=1234"""
+connection_string = """DRIVER={ODBC Driver 17 for SQL Server};SERVER=220.133.50.28;DATABASE=bloodtest;UID=cgmh;PWD=B[-!wYJ(E_i7Aj3r"""
 try:
     coxn = pyodbc.connect(connection_string)
-except pyodbc.OperationalError:
-    connection_string = "DRIVER={ODBC Driver 17 for SQL Server};SERVER=10.30.47.9;DATABASE=bloodtest;UID=henry423;PWD=1234"
+except pyodbc.InterfaceError:
+    # connection_string = "DRIVER={ODBC Driver 11 for SQL Server};SERVER=10.30.47.9;DATABASE=bloodtest;UID=henry423;PWD=1234"
+    connection_string = "DRIVER={SQL Server};SERVER=10.30.47.9;DATABASE=bloodtest;UID=henry423;PWD=1234"
 finally:
     coxn = pyodbc.connect(connection_string)
 
@@ -36,6 +49,7 @@ with coxn.cursor() as cursor:
 yearid = dict()
 for row in sql_yearid:
     sql_year, smear_id = row
+    sql_year = str(sql_year)
     if sql_year not in yearid:
         yearid[sql_year] = []
     yearid[sql_year].append(smear_id)
@@ -48,7 +62,7 @@ class Count:    #建立計數器
         # super().__init__()
         #建立主視窗前先取得初始資料
         # jsonfile = open('testdata\data.json','rb')
-        jsonfile = open('testdata\data_new.json','rb')
+        jsonfile = open(resource_path('testdata\data_new.json'),'rb')
         rawdata = json.load(jsonfile)
         self.rawdata = pd.DataFrame(rawdata["blood"])
         self.testyear = datetime.today().year
@@ -58,7 +72,6 @@ class Count:    #建立計數器
         # for item in self.rawdata:
         #     self.testdict[item["year"]].append(item["ID"])
         #刪除重複年
-        # testno = 0
         # testno = self.testlist.index('B001')
         # rawdata = self.rawdata[testno]["rawdata"]
         # 建立主視窗,用於容納其它元件  
@@ -847,6 +860,7 @@ class Count:    #建立計數器
         # print(y)
         self.totalcount.set(y)
         tal = self.totalcount.get()
+        
         #新增百分比更新
         for key in self.keybordmatrix:
             if key != '1' and key != '2':
@@ -855,7 +869,8 @@ class Count:    #建立計數器
                 self.keybordmatrix[key][5].set(percent)
             else:
                 val = self.keybordmatrix[key][4].get()
-                self.keybordmatrix[key][5].set(val)
+                per_tal = val / ((tal - 1) // 100 + 1)
+                self.keybordmatrix[key][5].set(per_tal)
     
     #函式下數
     def minus_count(self,event):
@@ -883,7 +898,8 @@ class Count:    #建立計數器
                 self.keybordmatrix[key][5].set(percent)
             else:
                 val = self.keybordmatrix[key][4].get()
-                self.keybordmatrix[key][5].set(val)
+                per_tal = val / ((tal - 1) // 100 + 1)
+                self.keybordmatrix[key][5].set(per_tal)
 
     #上下數switch
     def updown(self,event):
@@ -898,8 +914,8 @@ class Count:    #建立計數器
     #combobox雙層列表
     def callback_year(self):  
         testno = self.input_exam1.get()
-        fliter = (self.rawdata['year'] == testno)
-        self.testlist = self.rawdata[fliter]['ID']
+        # fliter = (self.rawdata['year'] == testno)
+        self.testlist = yearid[testno]
         self.input_exam2.configure(values=self.testlist)
 
     def callback(self,event):  
@@ -907,12 +923,26 @@ class Count:    #建立計數器
         testno = self.input_exam2.get()
         filter1 = (self.rawdata['year'] == testyear)
         filter2 = (self.rawdata['ID'] == testno)
-        crawdata = self.rawdata[filter1 & filter2]
-        rawdata = crawdata.iloc[0]['rawdata']
-        gender = crawdata.iloc[0]['gender']
-        age = crawdata.iloc[0]['age']
-        comment = crawdata.iloc[0]['comment']
-        countval = crawdata.iloc[0]['countval'] 
+        with coxn.cursor() as cursor:
+            cursor.execute("SELECT * FROM [bloodtest].[dbo].[bloodinfo] WHERE [year]= %s AND [smear_id]='%s';"%(testyear,testno))
+            crawdata = cursor.fetchone()
+        # crawdata = self.rawdata[filter1 & filter2]
+        # rawdata = crawdata.iloc[0]['rawdata']
+        with coxn.cursor() as cursor:
+            cursor.execute("SELECT * FROM [bloodtest].[dbo].[bloodinfo_cbc] WHERE [smear_id]='%s';"%(testno))
+            field_name = [des[0] for des in cursor.description]
+            rawdata = cursor.fetchone()
+        # print(field_name,rawdata)
+        rawdata_dict = dict(zip(field_name, rawdata))
+        ###
+        del rawdata_dict["smear_id"]
+        rawdata = rawdata_dict
+        ###
+        # print(rawdata)
+        gender = crawdata[3]
+        age = crawdata[4]
+        comment = crawdata[6]
+        countval = crawdata[5]
         for key,value in rawdata.items():
             self.info_cbc[key].set(rawdata[key])
         self.info_oth["gender"].set(gender)
@@ -927,7 +957,7 @@ class Count:    #建立計數器
     def tozero(self):
         state = self.start.cget("state")
         if state == "disabled":
-            if tk.messagebox.askyesno(title='土城醫院檢驗科',message="確定要歸0嗎?"):
+            if tk.messagebox.askyesno(title='檢驗醫學部(科)',message="確定要歸0嗎?"):
                 ##歸0 counter
                 for value in self.keybordmatrix.values():
                     value[4].set(0)
@@ -950,9 +980,9 @@ class Count:    #建立計數器
         testyear = self.input_exam1.get()
         testno = self.input_exam2.get()
         if testyear=="" or testno=="":
-            tk.messagebox.showerror(title='土城醫院檢驗科',message="尚未選擇考片!選擇後再開始測驗!")
+            tk.messagebox.showerror(title='檢驗醫學部(科)',message="尚未選擇考片!選擇後再開始測驗!")
             return
-        if tk.messagebox.askyesno(title='土城醫院檢驗科',message="""確定要開始測驗?
+        if tk.messagebox.askyesno(title='檢驗醫學部(科)',message="""確定要開始測驗?
 考片年份:%s
 考片編號%s"""%(testyear,testno)):
             self.open = datetime.now()
@@ -973,7 +1003,7 @@ class Count:    #建立計數器
         self.master.focus_set()
         self.master.bind("<Key>",self.pending)
     def sendtest(self):
-        if tk.messagebox.askyesno(title='土城長庚檢驗科', message='確定要交卷?', ):
+        if tk.messagebox.askyesno(title='檢驗醫學部(科)', message='確定要交卷?', ):
             testyear = self.input_exam1.get()
             testno = self.input_exam2.get()
             stamp = datetime.now()
@@ -1020,11 +1050,12 @@ class Count:    #建立計數器
             # with open('testdata/rawdata.json','w',encoding="utf8") as r:
             #     json.dump(a,r,ensure_ascii=False)
             #     r.close()
-            tk.messagebox.showinfo(title='土城長庚檢驗科', message="交卷成功!")
+            tk.messagebox.showinfo(title='檢驗醫學部(科)', message="交卷成功!")
             self.tozero()
             self.start.configure(state=tk.NORMAL)
             self.zero.configure(state=tk.NORMAL)
             # self.input_exam1.configure(state='readonly')
+            self.btn_sendtest.configure(state='disabled')
             self.input_exam2.configure(state='readonly')
             self.clear_btn.configure(state='normal')
             self.stop_clock()
@@ -1032,7 +1063,7 @@ class Count:    #建立計數器
             return
 
     def clear(self):
-        if tk.messagebox.askyesno(title="土城醫院檢驗科",message="確定要清除所選擇的考片?"):
+        if tk.messagebox.askyesno(title="檢驗醫學部(科)",message="確定要清除所選擇的考片?"):
             # self.input_exam1.set("")
             self.input_exam2.set("")
             for value in self.info_cbc.values():
@@ -1132,7 +1163,7 @@ class Count:    #建立計數器
         cancel_btn.grid(row=9,column=3,pady=5)
 
     def back(self,oldmaster):
-        # if tk.messagebox.askyesno(title='土城長庚檢驗科', message='確定要離開計數畫面，返回主畫面嗎?', ):
+        # if tk.messagebox.askyesno(title='檢驗醫學部(科)', message='確定要離開計數畫面，返回主畫面嗎?', ):
         try:
             oldmaster.deiconify()
             self.master.withdraw()

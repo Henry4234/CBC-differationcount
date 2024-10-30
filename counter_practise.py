@@ -1,3 +1,4 @@
+import sys,os
 import tkinter as tk
 import pandas as pd
 from tkinter import RIDGE, DoubleVar, StringVar, ttk, messagebox,IntVar
@@ -20,12 +21,23 @@ def getaccount(acount):
     print(Baccount)
     return None
 
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
 ###sql連線設定
-connection_string = """DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=bloodtest;UID=sa;PWD=1234"""
+connection_string = """DRIVER={ODBC Driver 17 for SQL Server};SERVER=220.133.50.28;DATABASE=bloodtest;UID=cgmh;PWD=B[-!wYJ(E_i7Aj3r"""
 try:
     coxn = pyodbc.connect(connection_string)
-except pyodbc.OperationalError:
-    connection_string = "DRIVER={ODBC Driver 17 for SQL Server};SERVER=10.30.47.8;DATABASE=bloodtest;UID=henry423;PWD=1234"
+except pyodbc.InterfaceError:
+    # connection_string = "DRIVER={ODBC Driver 11 for SQL Server};SERVER=10.30.47.9;DATABASE=bloodtest;UID=henry423;PWD=1234"
+    connection_string = "DRIVER={SQL Server};SERVER=10.30.47.9;DATABASE=bloodtest;UID=henry423;PWD=1234"
 finally:
     coxn = pyodbc.connect(connection_string)
 
@@ -48,7 +60,7 @@ class PRACTISE:    #建立計數器
         self.master.protocol("WM_DELETE_WINDOW",lambda: self.back(oldmaster))
         # super().__init__()
         #建立主視窗前先取得初始資料
-        jsonfile = open('testdata\data_new.json','rb')
+        jsonfile = open(resource_path('testdata\data_new.json'),'rb')
         rawdata = json.load(jsonfile)
         self.rawdata = pd.DataFrame(rawdata["blood"])
         # self.testyear = self.rawdata['year'].unique().tolist()
@@ -705,6 +717,17 @@ class PRACTISE:    #建立計數器
             text_color="#000000",
             )
         self.input_needcountval.grid(row=10,column=5)
+        self.btn_phrase = ctk.CTkButton(
+            self.frame_counter,
+            text="預設片語",
+            command= self.add_phrase,
+            fg_color="#CCCCCC",
+            corner_radius=8,
+            width=70,height=30,
+            font=('微軟正黑體',20),
+            text_color="#000000"
+        )
+        self.btn_phrase.grid(row=10,column=8,columnspan=2)
     # def gui_arrang(self):
         self.frame_exam.grid(row=0, column=0,columnspan=2,pady=20,sticky=tk.W)
         self.frame_time.grid(row=1, column=0,padx=3,ipadx=20)
@@ -794,7 +817,51 @@ class PRACTISE:    #建立計數器
     def stop_clock(self):
         self.doTick = False
 
-    
+    def add_phrase(self):
+        style = ttk.Style()
+        style.configure("Treeview",borderwidth=1,relief='solid')
+        window_phrase = ctk.CTkToplevel()
+        window_phrase.title("片語選擇")
+        window_phrase.geometry("400x300")
+        # 創建 Treeview 表格
+        columns = ("#1", "#2")
+        tree = ttk.Treeview(window_phrase, columns=columns, show="headings",style="Treeview")
+        # 設置表頭
+        tree.heading("#1", text="編號")
+        tree.heading("#2", text="片語")
+        # 調整欄位的寬度
+        tree.column("#1", width=50, anchor='center')  # 編號欄位寬度縮小
+        tree.column("#2", width=300, anchor='w')     # 片語欄位寬度增大
+        # 插入數據到表格
+        data = [
+            ("1","Preliminary report"),
+            ("2","PANIC VALUE ! 危險值通知 !"),
+            ("3","NRBC五顆以上，需補傳NRBC"),
+            ("4","Auer rod(+)"),
+            ("5","Smudge cell (+)"),
+            ("6","Faggot cell(+)"),
+            ("7","Rieder cell(+)"),
+            ("8","RBC Rouleaux formation(+)"),
+            ("9","Abnormal lymphocyte with large/small cleaved"),
+            ("10","Abnormal lymphoid cells with villous or cytoplasmic projections"),
+            ("11","Abn-Lym with irregular nucleus")
+        ]
+        for item in data:
+            tree.insert("", "end", values=item)
+        tree.pack(expand=True,fill="both")
+        # 雙擊事件處理函數
+        def on_double_click(event):
+            selected_item = tree.focus()  # 獲取當前選中的項目
+            if selected_item:
+                selected_table = tree.item(selected_item, "values")
+                selected_phrase = selected_table[1]  # 選取 "片語" 欄位的內容
+                
+                window_phrase.destroy()  # 關閉 new_window 視窗
+            else:
+                return
+            self.input_testcomment.insert("end",", " + str(selected_phrase))
+        # 將雙擊事件與表格綁定
+        tree.bind("<Double-1>", on_double_click)
     #函式判別上/下數、判別是否數錯方向
     def pending(self,event):
         if event.widget == self.input_testcomment:
@@ -854,7 +921,8 @@ class PRACTISE:    #建立計數器
                 self.keybordmatrix[key][5].set(percent)
             else:
                 val = self.keybordmatrix[key][4].get()
-                self.keybordmatrix[key][5].set(val)
+                per_tal = val / ((tal - 1) // 100 + 1)
+                self.keybordmatrix[key][5].set(per_tal)
     
     #函式下數
     def minus_count(self,event):
@@ -882,7 +950,8 @@ class PRACTISE:    #建立計數器
                 self.keybordmatrix[key][5].set(percent)
             else:
                 val = self.keybordmatrix[key][4].get()
-                self.keybordmatrix[key][5].set(val)
+                per_tal = val / ((tal - 1) // 100 + 1)
+                self.keybordmatrix[key][5].set(per_tal)
 
     #上下數switch
     def updown(self,event):
@@ -941,21 +1010,34 @@ class PRACTISE:    #建立計數器
         #轉換考題的時候要把計數規0(tozero)
     
     def tozero(self):
-        ##歸0 counter
-        for value in self.keybordmatrix.values():
-            value[4].set(0)
-            value[5].set(0)
-        ##歸0 總數
-        self.totalcount.set(0)
-        self.input_testcomment.delete("0.0",ctk.END)
+        state = self.start.cget("state")
+        if state == "disabled":
+            if tk.messagebox.askyesno(title='檢驗醫學部(科)',message="確定要歸0嗎?"):
+                ##歸0 counter
+                for value in self.keybordmatrix.values():
+                    value[4].set(0)
+                    value[5].set(0)
+                ##歸0 總數
+                self.totalcount.set(0)
+                self.input_testcomment.delete("0.0",ctk.END)
+            else:
+                 return
+        else:
+            ##歸0 counter
+            for value in self.keybordmatrix.values():
+                value[4].set(0)
+                value[5].set(0)
+            ##歸0 總數
+            self.totalcount.set(0)
+            self.input_testcomment.delete("0.0",ctk.END)
     def tstart(self):
         ##檢查是否有考片
         testyear = self.input_exam1.get()
         testno = self.input_exam2.get()
         if testyear=="" or testno=="":
-            tk.messagebox.showerror(title='土城醫院檢驗科',message="尚未選擇考片!選擇後再開始測驗!")
+            tk.messagebox.showerror(title='檢驗醫學部(科)',message="尚未選擇考片!選擇後再開始測驗!")
             return
-        if tk.messagebox.askyesno(title='土城醫院檢驗科',message="""確定要開始測驗?
+        if tk.messagebox.askyesno(title='檢驗醫學部(科)',message="""確定要開始測驗?
 考片年份:%s
 考片編號%s"""%(testyear,testno)):
             self.open = datetime.now()
@@ -976,7 +1058,7 @@ class PRACTISE:    #建立計數器
         self.master.focus_set()
         self.master.bind("<Key>",self.pending)
     def sendtest(self):
-        if tk.messagebox.askyesno(title='土城長庚檢驗科', message='確定要交卷?', ):
+        if tk.messagebox.askyesno(title='檢驗醫學部(科)', message='確定要交卷?', ):
             testyear = self.input_exam1.get()
             testno = self.input_exam2.get()
             stamp = datetime.now()
@@ -999,7 +1081,7 @@ class PRACTISE:    #建立計數器
             ##存入SQL
             with coxn.cursor() as cursor:
                 rawcount = ','.join(str(i) for i in ans)
-                val = """INSERT INTO [bloodtest].[dbo].[test_data]
+                val = """INSERT INTO [bloodtest].[dbo].[test_data_practise]
                 ("test_id","smear_id","plasma cell","abnormal lympho","megakaryocyte","nRBC","blast","metamyelocyte","eosinophil","plasmacytoid","promonocyte","promyelocyte","band neutropil","basopil","atypical lymphocyte","hypersegmented neutrophil","myelocyte","segmented neutrophil","lymphocyte","monocyte","comment") 
                 VALUES (%d,'%s', %s,'%s');""" %(ac,testno,rawcount,comment)
                 cursor.execute(val)
@@ -1022,7 +1104,7 @@ class PRACTISE:    #建立計數器
             # # with open('testdata/rawdata.json','w') as r:
             # #     json.dump(a,r)
             # #     r.close()
-            tk.messagebox.showinfo(title='土城長庚檢驗科', message="交卷成功!")
+            tk.messagebox.showinfo(title='檢驗醫學部(科)', message="交卷成功!")
             self.tozero()
             self.start.configure(state=tk.NORMAL)
             self.zero.configure(state=tk.NORMAL)
@@ -1034,7 +1116,7 @@ class PRACTISE:    #建立計數器
             return
 
     def clear(self):
-        if tk.messagebox.askyesno(title="土城醫院檢驗科",message="確定要清除所選擇的考片?"):
+        if tk.messagebox.askyesno(title="檢驗醫學部(科)",message="確定要清除所選擇的考片?"):
             self.input_exam1.set("")
             self.input_exam2.set("")
             for value in self.info_cbc.values():
@@ -1134,7 +1216,7 @@ class PRACTISE:    #建立計數器
         cancel_btn.grid(row=9,column=3,pady=5)
 
     def back(self,oldmaster):
-        # if tk.messagebox.askyesno(title='土城長庚檢驗科', message='確定要離開計數畫面，返回主畫面嗎?', ):
+        # if tk.messagebox.askyesno(title='檢驗醫學部(科)', message='確定要離開計數畫面，返回主畫面嗎?', ):
         try:
             oldmaster.deiconify()
             self.master.withdraw()

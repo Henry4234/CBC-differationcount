@@ -1,3 +1,4 @@
+import sys,os
 import tkinter as tk
 import customtkinter  as ctk
 from tksheet import Sheet
@@ -20,11 +21,12 @@ import sqlalchemy as sa
 #     # print(Baccount)
 #     return None
 #SQL連線設定
-connection_string = """DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=bloodtest;UID=sa;PWD=1234"""
+connection_string = """DRIVER={ODBC Driver 17 for SQL Server};SERVER=220.133.50.28;DATABASE=bloodtest;UID=cgmh;PWD=B[-!wYJ(E_i7Aj3r"""
 try:
     coxn = pyodbc.connect(connection_string)
-except pyodbc.OperationalError:
-    connection_string = "DRIVER={ODBC Driver 17 for SQL Server};SERVER=10.30.47.9;DATABASE=bloodtest;UID=henry423;PWD=1234"
+except pyodbc.InterfaceError:
+    # connection_string = "DRIVER={ODBC Driver 11 for SQL Server};SERVER=10.30.47.9;DATABASE=bloodtest;UID=henry423;PWD=1234"
+    connection_string = "DRIVER={SQL Server};SERVER=10.30.47.9;DATABASE=bloodtest;UID=henry423;PWD=1234"
 finally:
     coxn = pyodbc.connect(connection_string)
 #取出年份(唯一)
@@ -40,6 +42,17 @@ str_un_year =[]
 for item in un_year:
     item  = str(item)
     str_un_year.append(item)
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
 class SCORE_CAL:
 
     def __init__(self,master,oldmaster=None):
@@ -57,9 +70,9 @@ class SCORE_CAL:
         self.labelframe_1.grid(row=0, column=0, rowspan=2,sticky='nsew')
         self.labelframe_2 = ctk.CTkFrame(self.master,fg_color="#FFEEDD",bg_color="#FFEEDD")
         self.labelframe_2.grid(row=0, column=1)
-        self.testicon = ctk.CTkImage(Image.open("assets\pages.png"),size=(120,120))
+        self.testicon = ctk.CTkImage(Image.open(resource_path("assets\pages.png")),size=(120,120))
         #引入henry計算Range
-        filename = "./chart/rangechart.json"
+        filename = resource_path("./chart/rangechart.json")
         self.rangechart = pd.read_json(filename)
         # self.celllst = Ans
         #計算用的list
@@ -275,26 +288,29 @@ class SCORE_CAL:
         h_site = self.all_combobox.get()
         testyear = self.year_combobox.get()
         if h_site =="":
-            tk.messagebox.showerror(title='土城醫院檢驗科', message='請選擇院區!所有院區請選擇ALL')
+            tk.messagebox.showerror(title='檢驗醫學部(科)', message='請選擇院區!所有院區請選擇ALL')
         elif h_site =="All":
-            srh = """SELECT [id].[院區],[id].[ac],[test_data].[smear_id],[test_data].[count],[test_data].[timestamp] 
+            srh = """SELECT [hospital_code].[院區],[id].[ac],[test_data].[smear_id],[test_data].[count],[test_data].[timestamp] 
             FROM [bloodtest].[dbo].[test_data] 
             JOIN [bloodtest].[dbo].[id] 
             ON [id].[No] = [test_data].[test_id]
+            JOIN [bloodtest].[dbo].[hospital_code] 
+            ON [hospital_code].[code] = [id].[院區]
             WHERE [score] IS NULL;"""
         else:
-            srh = """SELECT [bloodtest].[dbo].[id].[院區],[bloodtest].[dbo].[id].[ac],[bloodtest].[dbo].[test_data].[smear_id],[bloodtest].[dbo].[test_data].[count],[bloodtest].[dbo].[test_data].[timestamp] 
+            srh = """SELECT [bloodtest].[dbo].[hospital_code].[院區],[bloodtest].[dbo].[id].[ac],[bloodtest].[dbo].[test_data].[smear_id],[bloodtest].[dbo].[test_data].[count],[bloodtest].[dbo].[test_data].[timestamp] 
             FROM [bloodtest].[dbo].[test_data] 
             JOIN [bloodtest].[dbo].[id] ON [id].[No] = [test_data].[test_id]
             JOIN [bloodtest].[dbo].[bloodinfo] ON [bloodinfo].[smear_id] = [test_data].[smear_id]
-            WHERE [id].[院區] = '%s' AND [bloodinfo].[year] = %d 
+            JOIN [bloodtest].[dbo].[hospital_code] ON [hospital_code].[code] = [id].[院區]
+            WHERE [hospital_code].[院區] = '%s' AND [bloodinfo].[year] = %d 
             AND [score] IS NULL;"""%(h_site,int(testyear))
         with coxn.cursor() as cursor:
             cursor.execute(srh)
             data_sht_1 = cursor.fetchall()
         # print(data_sht_1)
         if data_sht_1 ==[]:
-            tk.messagebox.showinfo(title='土城醫院檢驗科',message="搜尋結果並無須要計算結果之考片") 
+            tk.messagebox.showinfo(title='檢驗醫學部(科)',message="搜尋結果並無須要計算結果之考片") 
             return
         else:
             self.sht_result.set_sheet_data(data_sht_1,reset_col_positions=True,reset_row_positions=True)
@@ -309,12 +325,12 @@ class SCORE_CAL:
             self.row_data = self.sht_result.get_row_data(last_selected.row)
         
         except AttributeError:
-           tk.messagebox.showerror(title='土城醫院檢驗科',message="先查詢批改資訊後，選擇後再進行批改!") 
+           tk.messagebox.showerror(title='檢驗醫學部(科)',message="先查詢批改資訊後，選擇後再進行批改!") 
            return
         except IndexError:
-            tk.messagebox.showerror(title='土城醫院檢驗科',message="先查詢批改資訊後，選擇後再進行批改!") 
+            tk.messagebox.showerror(title='檢驗醫學部(科)',message="先查詢批改資訊後，選擇後再進行批改!") 
             return
-        if tk.messagebox.askyesno(title='土城醫院檢驗科',message="上述選擇正確?"):
+        if tk.messagebox.askyesno(title='檢驗醫學部(科)',message="上述選擇正確?"):
             # print (self.row_data)
             merge =[]
             #取出血片解答
@@ -377,7 +393,7 @@ WHERE [smear_id] ='%s';"""%(self.row_data[2])
 #####↓↓↓↓↓##################計算成績: 餵進去計算成績##################↓↓↓↓↓#####
     def calculate_cell(self):
         must_chk,mustnot_chk,ablym_chk,final_score = self.calculate(ans_tuple=self.data_sht_2,entry_lst=self.cal_percent,data_count_val=self.data_count_val)
-        tk.messagebox.showinfo(title='土城醫院檢驗科', message="""已完成計算!
+        tk.messagebox.showinfo(title='檢驗醫學部(科)', message="""已完成計算!
 (空白表示不需檢查)
 必須打到細胞檢查: %s
 不可打到細胞檢查: %s
@@ -537,9 +553,9 @@ plasmacell+abn-Lym:%s
     def multi_upload(self):
         ##先檢查有沒有搜尋結果，如果沒有的話show error
         if self.sht_result.get_sheet_data()==[]:
-            tk.messagebox.showerror(title='土城醫院檢驗科',message="尚未選擇範圍!!請搜尋後再次啟用!") 
+            tk.messagebox.showerror(title='檢驗醫學部(科)',message="尚未選擇範圍!!請搜尋後再次啟用!") 
             return
-        if tk.messagebox.askyesno(title='土城醫院檢驗科',message="確定要多重計算後，自動上傳?"):
+        if tk.messagebox.askyesno(title='檢驗醫學部(科)',message="確定要多重計算後，自動上傳?"):
             multi_lst = pd.DataFrame(self.sht_result.get_sheet_data())
             ##迴圈搜尋結果
             for i in range(0,len(multi_lst)):
@@ -630,7 +646,7 @@ plasmacell+abn-Lym:%s
                             WHERE[smear_id]='%s' AND [count]=%d AND [test_id]=%d AND [celltype]='%s';"""%(multi_lst.iloc[i][2],multi_lst.iloc[i][3],t_id,cell_score_matrix[j][0],t_id,multi_lst.iloc[i][2],multi_lst.iloc[i][3],cell_score_matrix[j][0],cell_score_matrix[j][1],cell_score_matrix[j][2],cell_score_matrix[j][1],cell_score_matrix[j][2],multi_lst.iloc[i][2],multi_lst.iloc[i][3],t_id,cell_score_matrix[j][0])
                         cursor.execute(upload_final_2)
                     coxn.commit()
-            tk.messagebox.showinfo(title='土城醫院檢驗科', message="搜尋結果已全部計算總成績且完成上傳!!")
+            tk.messagebox.showinfo(title='檢驗醫學部(科)', message="搜尋結果已全部計算總成績且完成上傳!!")
             self.clear()
             return
 #####↑↑↑↑↑##############多次成績計算，自動上傳#############↑↑↑↑↑#####
@@ -639,7 +655,7 @@ plasmacell+abn-Lym:%s
         ##需要資訊:院區、考核人員、考片ID、考核次數、最後總分
         final_score = int(self.combobox_tscore.get())
         show = [x for x in self.row_data]
-        if tk.messagebox.askyesno(title='土城醫院檢驗科',message="""請確認以下資訊:
+        if tk.messagebox.askyesno(title='檢驗醫學部(科)',message="""請確認以下資訊:
 院區: %s
 考核人員: %s
 考片ID: %s
@@ -687,7 +703,7 @@ AND [test_data].[count] = %d;"""%(final_score,self.must_chk,self.mustnot_chk,sel
                                 WHERE[smear_id]='%s' AND [count]=%d AND [test_id]=%d AND [celltype]='%s';"""%(show[2],show[3],t_id,cell_score_matrix[j][0],t_id,show[2],show[3],cell_score_matrix[j][0],cell_score_matrix[j][1],cell_score_matrix[j][2],cell_score_matrix[j][1],cell_score_matrix[j][2],show[2],show[3],t_id,cell_score_matrix[j][0])
                     cursor.execute(upload_final_2)
                 coxn.commit()
-            tk.messagebox.showinfo(title='土城醫院檢驗科', message="已完成上傳!")
+            tk.messagebox.showinfo(title='檢驗醫學部(科)', message="已完成上傳!")
             self.clear()
             return
         else:
