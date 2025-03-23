@@ -16,6 +16,7 @@ from verifyAccount import changepw_sql
 def getaccount(acount):
     global Baccount
     Baccount = str(acount)
+
     return None
 
 class Basedesk:
@@ -26,7 +27,7 @@ class Basedesk:
         super().__init__()
         ctk.set_default_color_theme("dark-blue")  
         # 給主視窗設定標題內容  
-        self.master.title("能力試驗")  
+        self.master.title("形態學考核及教育程式-v3.3")  
         self.master.geometry('800x650')
         self.master.config(background='#FFEEDD') #設定背景色
         global account_1
@@ -117,16 +118,27 @@ class Basedesk:
             text_color="#000000"
             )
         self.button_practise.grid(row = 0,column = 0,padx=10, pady=10)
-        self.button_image_pracrice=ctk.CTkButton(
+        self.button_image_pracrice_1=ctk.CTkButton(
             self.labelframe_3, 
-            command = self.image_practise, 
-            text = "圖庫練習",
+            # command = lambda:self.image_practise(1), 
+            command= None,
+            text = "圖庫練習_初階",
             fg_color='#A8DEF0', 
             width=200,height=70,
             font=('微軟正黑體',26),
             text_color="#000000"
             )
-        self.button_image_pracrice.grid(row = 0,column = 1,padx=10, pady=10)
+        self.button_image_pracrice_1.grid(row = 0,column = 1,padx=10, pady=10)
+        self.button_image_pracrice_2=ctk.CTkButton(
+            self.labelframe_3, 
+            command = lambda:self.image_practise(2), 
+            text = "圖庫練習_中階",
+            fg_color='#A8DEF0', 
+            width=200,height=70,
+            font=('微軟正黑體',26),
+            text_color="#000000"
+            )
+        self.button_image_pracrice_2.grid(row = 0,column = 2,padx=10, pady=10)
         self.button_search=ctk.CTkButton(
             self.labelframe_2, 
             command = self.scoresearch, 
@@ -179,6 +191,15 @@ class Basedesk:
             font=("Calibri",12),
             width=150)
         self.cc.pack()
+        self.versioninfo = ctk.CTkLabel(
+            self.master, 
+            fg_color="#FFEEDD",
+            bg_color='#FFEEDD',
+            text='@version -3.3',
+            text_color="#000000",
+            font=("Calibri",12),
+            width=80)
+        self.versioninfo.pack()
     # gui_arrang
         self.hellow_label.place(relx=0.5, rely=0.05, anchor=tk.CENTER)
         self.label_1.place(relx=0.5, rely=0.13, anchor=tk.CENTER)
@@ -186,6 +207,7 @@ class Basedesk:
         self.button_exit.place(relx=0.5,rely=0.9,anchor=tk.CENTER)
         self.button_changepw.place(relx=0.8,rely=0.9,anchor=tk.CENTER)
         self.cc.place(relx=1, rely=1,anchor=tk.SE) 
+        self.versioninfo.place(relx=0, rely=1,anchor=tk.SW) 
         self.labelframe_1.place(relx=0.5,rely=0.34, anchor=tk.CENTER)
         self.labelframe_2.place(relx=0.5,rely=0.7, anchor=tk.CENTER)
         self.labelframe_3.place(relx=0.5,rely=0.5, anchor=tk.CENTER)
@@ -262,12 +284,13 @@ class Basedesk:
         self.newWindow = ctk.CTkToplevel()
         counter_practise.getaccount(Baccount)
         P = PRACTISE(self.newWindow,self.master)
-    def image_practise(self):
+    def image_practise(self,level):
         import practice_image
         from practice_image import IMAGEPRACTICE
         self.master.withdraw() #把basedesk隱藏
         self.newWindow = ctk.CTkToplevel()
         practice_image.getaccount(Baccount)
+        practice_image.getlevel(level)
         IP = IMAGEPRACTICE(self.newWindow,self.master)
     def scoresearch(self):
         import ScoreSearch

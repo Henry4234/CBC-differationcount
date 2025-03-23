@@ -26,13 +26,22 @@ with coxn.cursor() as cursor:
     cursor.execute(query)
     acpw = dict(cursor.fetchall())
 
-##建立dict 包含院區帳號acht
+
+##建立dict-> key:govid身分證字號, value:[account,permission]
 with coxn.cursor() as cursor:
-    query = "SELECT ac,[hospital_code].[院區]  FROM [bloodtest].[dbo].[id] JOIN [bloodtest].[dbo].[hospital_code] ON [hospital_code].[code]=[id].[院區];"
+    query = "SELECT govid,ac,[permission].[permission_en],[id].[院區] FROM [bloodtest].[dbo].[id] JOIN [bloodtest].[dbo].[permission] ON [permission].[Order] = [id].[permission];"
     cursor.execute(query)
-    acht = dict(cursor.fetchall())
-# print(acht)
-    
+    govid_ac_permission = cursor.fetchall()
+# print(govid_ac_permission)
+
+no_govid=[item for item in govid_ac_permission if item[0]==""]
+govid_ac_permission=[item for item in govid_ac_permission if item[0]!=""]
+
+dict_id ={key[0]:key[1:] for key in govid_ac_permission}
+# print(dict_id)
+# print(no_govid)
+
+
 ##建立hospital_code_dict 包含院區帳號acht
 with coxn.cursor() as cursor:
     query = "SELECT [院區],code FROM [bloodtest].[dbo].[hospital_code];"
@@ -54,7 +63,6 @@ def refresh_acpw():
 # acpw = cursor.fetchall()
 # acpw = dict((x, y) for x, y in acpw)
 
-# print(acpw)
 
 def verifyAccountData(account,password):
     md = {}
@@ -270,38 +278,47 @@ def hos_matrix(hospital_code):
     return "找不到對應的地點"
 
 def hos_rematrix(hospital_name):
-    #如果回傳德是一個list的話
+    #如果回傳的是一個list的話
     if isinstance(ht_code[hospital_name], list):
         return str(ht_code[hospital_name][0])
     else:
         return str(ht_code[hospital_name])
 
 #連接登入LMS
-def verifyAccountData_lms(account,hospital):
+def verifyAccountData_lms(govid,account,hospital_name):
+    hospital_code = hos_rematrix(hospital_name)
     #傳進來的hospital會是代碼，需要經過轉換
-
-    # with open('pw.pickle','rb') as usr_file:
-    #         usrs_info=pickle.load(usr_file)
-    if account in acht:
-        hos = acht[account]
-        
-        if account == "admin" and hos == hospital:
-            return "master"
-        elif hos == hospital:
-            return "user"
-        else:
-            return "nohos"
-    #使用者名稱密碼不能為空
-    elif account=='' or hospital=='' :
-        return "empty"
+    if govid in dict_id:
+        if dict_id[govid][0]==account and dict_id[govid][2]==hospital_code:
+            return dict_id[govid][1]
     #不在資料庫中彈出是否註冊的框
     else:
+        for no_govid_item in no_govid:
+            # print(no_govid_item[1])
+            # print(account)
+            # print(no_govid_item[3])
+            # print(hospital_code)
+            if no_govid_item[1] == account and no_govid_item[3] == hospital_code:
+                return "noGovid"
+            else:
+                continue
         return "noAccount"
+
 #如果table[id]找不到account，或者有account，但沒有院區(可能為重名)，那就INSERT一個帳號給他
-def addaccount_lms(account,hospital):
-    hospital = hos_rematrix(hospital)
+def addaccount_lms(account,hospitalcode,govid):
+    if hospitalcode=='4'or hospitalcode=='L'or hospitalcode=='C'or hospitalcode=='I':
+        hospitalname = hos_matrix(hospitalcode)
+        hospitalcode = hos_rematrix(hospitalname)
     with coxn.cursor() as cursor:
-            sql = """INSERT INTO [bloodtest].[dbo].[id] ("院區","ac") VALUES ('%s','%s');"""%(hospital,account)
-            cursor.execute(sql)
+        sql = """INSERT INTO [bloodtest].[dbo].[id] ("院區","ac","govid",permission) VALUES ('%s','%s','%s',4);"""%(hospitalcode,account,govid)
+        cursor.execute(sql)
+    coxn.commit()
+    return "success"
+
+def noGovid_lms(account,hospital_name,govid):
+    hospitalcode = hos_rematrix(hospital_name)
+    with coxn.cursor() as cursor:
+        sql = """UPDATE [bloodtest].[dbo].[id] SET [govid]='%s' WHERE [ac]='%s' AND [院區]=%s ;"""%(govid,account,hospitalcode)
+        cursor.execute(sql)
     coxn.commit()
     return "success"
