@@ -12,9 +12,12 @@ def getaccount(acount):
     global Baccount
     Baccount = str(acount) 
     # Baccount = "henry423"
-    print(Baccount)
+    # print(Baccount)
     return None
-
+def getlevel(level):
+    global test_level
+    test_level = int(level) 
+    return None
 ##連線SQL
 connection_string = """DRIVER={ODBC Driver 17 for SQL Server};SERVER=220.133.50.28;DATABASE=bloodtest;UID=cgmh;PWD=B[-!wYJ(E_i7Aj3r"""
 try:
@@ -40,28 +43,33 @@ cell_info = {key: value.replace("\r", "") for key, value in cell_info}
 
 ##利用細胞名稱，隨機取三個不同種類的細胞
 test_lst =[]
-for item in celltype:
-    with coxn.cursor() as cursor:
-        #如果是太難太少的細胞，就選兩個就好
-        if item =="atypical lymphocyte" or item=="abnormal lympho" or item=="promonocyte" or item=="basopil":
-            ans = """SELECT TOP 2 [celltype],[image] FROM [bloodtest].[dbo].[cell]
-                    WHERE [celltype]= '%s' 
-                    ORDER BY NEWID();"""%(item)
-        else:
-            ans = """SELECT TOP 3 [celltype],[image] FROM [bloodtest].[dbo].[cell]
-                    WHERE [celltype]= '%s' 
-                    ORDER BY NEWID();"""%(item)
-        cursor.execute(ans)
-        ans = cursor.fetchall()
-    for i in ans:
-        test_lst.append(i)
-##生成1-50隨機且不重複的序列號碼列表，當作題目編號
-test_no = random.sample(range(1,51),50)
-test_final = zip(test_no,test_lst)
-test_dict = {key: value for key, value in test_final}
-##test_dict格式 test_dict={1:["abnormal lymphocyte",<圖片二進位的碼>]}
-# print(test_lst)
-# print(test_dict)
+def generate_test(test_level):
+    global test_no,test_final,test_dict
+    for item in celltype:
+        with coxn.cursor() as cursor:
+            if test_level==1:   #難度為初階的話
+                pass
+            else:   #難度為中階
+                #如果是太難太少的細胞，就選兩個就好
+                if item =="atypical lymphocyte" or item=="abnormal lympho" or item=="promonocyte" or item=="basopil":
+                    ans = """SELECT TOP 2 [celltype],[image] FROM [bloodtest].[dbo].[cell]
+                            WHERE [celltype]= '%s' 
+                            ORDER BY NEWID();"""%(item)
+                else:
+                    ans = """SELECT TOP 3 [celltype],[image] FROM [bloodtest].[dbo].[cell]
+                            WHERE [celltype]= '%s' 
+                            ORDER BY NEWID();"""%(item)
+            cursor.execute(ans)
+            ans = cursor.fetchall()
+        for i in ans:
+            test_lst.append(i)
+    ##生成1-50隨機且不重複的序列號碼列表，當作題目編號
+    test_no = random.sample(range(1,51),50)
+    test_final = zip(test_no,test_lst)
+    test_dict = {key: value for key, value in test_final}
+    ##test_dict格式 test_dict={1:["abnormal lymphocyte",<圖片二進位的碼>]}
+    # print(test_lst)
+    # print(test_dict)
 
 
 class IMAGEPRACTICE:
@@ -86,14 +94,23 @@ class IMAGEPRACTICE:
         self.labelframe_2.grid(row=1, column=0,columnspan=2,sticky="nsew")
         self.labelframe_3 = ctk.CTkFrame(self.master,fg_color="#FFEEDD",bg_color="#FFEEDD")
         self.labelframe_result = ctk.CTkFrame(self.master,fg_color="#FFDCB9",bg_color="#FFEEDD")
-        self.label_start = ctk.CTkLabel(
-            self.labelframe_1, 
-            fg_color="#FFEEDD",
-            text='圖庫練習',
-            text_color="#000000",
-            font=("微軟正黑體",60),
-            width=120)
-        self.label_start.grid(row =0, column = 0,pady=100, sticky="ew")
+        if test_level==1:
+            self.label_start = ctk.CTkLabel(
+                self.labelframe_1, 
+                fg_color="#FFEEDD",
+                text='圖庫練習_初階',
+                text_color="#000000",
+                font=("微軟正黑體",60),
+                width=120)
+        else:
+            self.label_start = ctk.CTkLabel(
+                self.labelframe_1, 
+                fg_color="#FFEEDD",
+                text='圖庫練習_中階',
+                text_color="#000000",
+                font=("微軟正黑體",60),
+                width=120)
+        self.label_start.grid(row =0, column = 0,pady=100, sticky="ew",columnspan=2)
         self.btn_start = ctk.CTkButton(
             self.labelframe_1,
             command = self.start, 
@@ -105,7 +122,7 @@ class IMAGEPRACTICE:
             font=('微軟正黑體',22,'bold'),
             text_color="#000000"
             )
-        self.btn_start.grid(row=1, column=0,)
+        self.btn_start.grid(row=2, column=0,columnspan=2)
 
 
         ##建立按鍵與細胞連結
@@ -183,6 +200,7 @@ class IMAGEPRACTICE:
         )
         self.btn_exit.grid(row=2,column=0,padx=5,pady=4,sticky='nsew')
         # self.btn_exit.grid(row=4, column=0,padx=5,pady=4,sticky='nsew')
+        generate_test(test_level)
 
 
 
