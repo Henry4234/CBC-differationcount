@@ -13,7 +13,7 @@ from verifyAccount import changepw_sql
 # from counter import getaccount
 # global account
 # account = sys.argv[1]
-def getaccount(acount):
+def get_accountpermission(acount):
     global Baccount
     Baccount = str(acount)
 
@@ -27,7 +27,7 @@ class Basedesk:
         super().__init__()
         ctk.set_default_color_theme("dark-blue")  
         # 給主視窗設定標題內容  
-        self.master.title("形態學考核及教育程式-v3.3")  
+        self.master.title("形態學考核及教育程式-v4.0")  
         self.master.geometry('800x650')
         self.master.config(background='#FFEEDD') #設定背景色
         global account_1
@@ -195,7 +195,7 @@ class Basedesk:
             self.master, 
             fg_color="#FFEEDD",
             bg_color='#FFEEDD',
-            text='@version -3.3',
+            text='@version -4.0',
             text_color="#000000",
             font=("Calibri",12),
             width=80)

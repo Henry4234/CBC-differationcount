@@ -28,16 +28,19 @@ with coxn.cursor() as cursor:
 
 
 ##建立dict-> key:govid身分證字號, value:[account,permission]
-with coxn.cursor() as cursor:
-    query = "SELECT govid,ac,[permission].[permission_en],[id].[院區] FROM [bloodtest].[dbo].[id] JOIN [bloodtest].[dbo].[permission] ON [permission].[Order] = [id].[permission];"
-    cursor.execute(query)
-    govid_ac_permission = cursor.fetchall()
-# print(govid_ac_permission)
+#整合進refresh_sql_data
 
-no_govid=[item for item in govid_ac_permission if item[0]==""]
-govid_ac_permission=[item for item in govid_ac_permission if item[0]!=""]
+# with coxn.cursor() as cursor:
+#     query = "SELECT govid,ac,[permission].[permission_en],[id].[院區] FROM [bloodtest].[dbo].[id] JOIN [bloodtest].[dbo].[permission] ON [permission].[Order] = [id].[permission];"
+#     cursor.execute(query)
+#     govid_ac_permission = cursor.fetchall()
+# # print(govid_ac_permission)
 
-dict_id ={key[0]:key[1:] for key in govid_ac_permission}
+# no_govid=[item for item in govid_ac_permission if item[0]==""]
+# govid_ac_permission=[item for item in govid_ac_permission if item[0]!=""]
+
+# dict_id ={key[0]:key[1:] for key in govid_ac_permission}
+#dict_id = {"govid": ('ac','permission','院區'),...}
 # print(dict_id)
 # print(no_govid)
 
@@ -284,8 +287,23 @@ def hos_rematrix(hospital_name):
     else:
         return str(ht_code[hospital_name])
 
+
+def refresh_sql_data():
+    global no_govid,govid_ac_permission,dict_id
+    with coxn.cursor() as cursor:
+        query = "SELECT govid,ac,[permission].[permission_en],[id].[院區] FROM [bloodtest].[dbo].[id] JOIN [bloodtest].[dbo].[permission] ON [permission].[Order] = [id].[permission];"
+        cursor.execute(query)
+        govid_ac_permission = cursor.fetchall()
+    # print(govid_ac_permission)
+
+    no_govid=[item for item in govid_ac_permission if item[0]==""]
+    govid_ac_permission=[item for item in govid_ac_permission if item[0]!=""]
+
+    dict_id ={key[0]:key[1:] for key in govid_ac_permission}
+
 #連接登入LMS
 def verifyAccountData_lms(govid,account,hospital_name):
+    refresh_sql_data()
     hospital_code = hos_rematrix(hospital_name)
     #傳進來的hospital會是代碼，需要經過轉換
     if govid in dict_id:
@@ -318,7 +336,9 @@ def addaccount_lms(account,hospitalcode,govid):
 def noGovid_lms(account,hospital_name,govid):
     hospitalcode = hos_rematrix(hospital_name)
     with coxn.cursor() as cursor:
-        sql = """UPDATE [bloodtest].[dbo].[id] SET [govid]='%s' WHERE [ac]='%s' AND [院區]=%s ;"""%(govid,account,hospitalcode)
+        sql = """UPDATE [bloodtest].[dbo].[id] SET [govid]='%s' WHERE [ac]='%s' AND [院區]='%s' ;"""%(govid,account,hospitalcode)
         cursor.execute(sql)
     coxn.commit()
     return "success"
+
+refresh_sql_data()
