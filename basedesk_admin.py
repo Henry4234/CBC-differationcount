@@ -27,7 +27,7 @@ class Basedesk_Admin:
         # self.root = ctk.CTk()
         ctk.set_default_color_theme("dark-blue")  
         # 給主視窗設定標題內容  
-        self.master.title("形態學考核及教育程式-v4.0")  
+        self.master.title("形態學考核及教育程式-v4.2")  
         self.master.geometry('650x600')
         self.master.config(background='#FFEEDD') #設定背景色
         # global account_1
@@ -264,7 +264,7 @@ class Basedesk_Admin:
             self.master, 
             fg_color="#FFEEDD",
             bg_color='#FFEEDD',
-            text='@version -4.0',
+            text='@version -4.2',
             text_color="#000000",
             font=("Calibri",12),
             width=80)
@@ -287,6 +287,8 @@ class Basedesk_Admin:
         if Permission=="useradmin":
             self.button_practise.configure(state="disabled")
             self.button_image_pracrice.configure(state="disabled")
+        elif Permission=="master":
+            self.button_5.configure(state="normal")
         elif Permission=="primarysupervisor":
             self.button_4.configure(state="disabled")
         elif Permission=="secondarysupervisor":

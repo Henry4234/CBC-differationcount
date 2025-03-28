@@ -26,6 +26,7 @@ class LMS:
     def __init__(self):
         self.hospital_code = verifyAccount.hos_matrix(ht)
         self.verifyResult = verifyAccount.verifyAccountData_lms(govid,ac,self.hospital_code)
+        self.login_result()
     def login_result(self):
         if self.verifyResult=='administrator':  
             tk.messagebox.showinfo(title='檢驗醫學部(科)', message='進入admin介面')
@@ -54,10 +55,10 @@ class LMS:
             stat = verifyAccount.addaccount_lms(ac,ht,govid)
             if stat == "success":
                 tk.messagebox.showinfo(title='檢驗醫學部(科)', message='新增使用者成功!')
-                verifyResult='user'
+                self.verifyResult='user'
                 self.loginuser()
         
-        elif verifyResult=='empty':
+        elif self.verifyResult=='empty':
             tk.messagebox.showerror(title='檢驗醫學部(科)', message='參數錯誤，請聯繫管理人員!')
             return
     #user登入
@@ -79,6 +80,5 @@ class LMS:
 def main():  
     # 初始化物件  
     L = LMS()
-    L.login_result()
 if __name__ == '__main__':  
     main()
