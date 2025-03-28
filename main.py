@@ -146,7 +146,7 @@ class Login:    #建立登入介面
         
         self.newWindow = ctk.CTkToplevel()
         # root = ctk.CTk()
-        basedesk.getaccount(account)
+        basedesk.get_accountpermission(account)
         B = basedesk.Basedesk(self.newWindow,self.master)
         # self.master.destroy()
         # B = basedesk.Basedesk()
@@ -160,7 +160,7 @@ class Login:    #建立登入介面
         self.master.withdraw()
         # self.master.destroy()
         self.newWindow = ctk.CTkToplevel()
-        basedesk_admin.getaccount(account)
+        basedesk_admin.get_accountpermission(account,permission='master')
         B = basedesk_admin.Basedesk_Admin(self.newWindow,self.master)
         # self.master.destroy()
         # command = "python basedesk_admin.py " + account

@@ -294,9 +294,8 @@ def refresh_sql_data():
         query = "SELECT govid,ac,[permission].[permission_en],[id].[院區] FROM [bloodtest].[dbo].[id] JOIN [bloodtest].[dbo].[permission] ON [permission].[Order] = [id].[permission];"
         cursor.execute(query)
         govid_ac_permission = cursor.fetchall()
-    # print(govid_ac_permission)
 
-    no_govid=[item for item in govid_ac_permission if item[0]==""]
+    no_govid=[item for item in govid_ac_permission if item[0]==None or item[0]==""]
     govid_ac_permission=[item for item in govid_ac_permission if item[0]!=""]
 
     dict_id ={key[0]:key[1:] for key in govid_ac_permission}
