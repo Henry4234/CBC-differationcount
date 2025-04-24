@@ -14,11 +14,11 @@ freq = 600  # Hz
 duration_1 = 900  # millisecond
 freq_1 = 1000  # Hz
 
-def getaccount(acount):
-    global Baccount
+def getaccount(acount,govid):
+    global Baccount,Govid
     Baccount = str(acount) 
+    Govid = str(govid)
     # Baccount = "henry423"
-    print(Baccount)
     return None
 
 def resource_path(relative_path):
@@ -1076,7 +1076,7 @@ class PRACTISE:    #建立計數器
                     ans.append(rawcount)
             ##確認輸入者id
             with coxn.cursor() as cursor:
-                cursor.execute("SELECT No FROM[bloodtest].[dbo].[id] WHERE [ac]='%s';" %(Baccount))
+                cursor.execute("SELECT No FROM[bloodtest].[dbo].[id] WHERE [govid]='%s';" %(Govid))
                 ac = cursor.fetchone()[0]
             ##存入SQL
             with coxn.cursor() as cursor:

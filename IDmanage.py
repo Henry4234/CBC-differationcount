@@ -34,6 +34,12 @@ with coxn.cursor() as cursor:
     hos = cursor.fetchall()
 hos = [e[0] for e in hos]
 
+##擷取SQL permission table中有的角色
+with coxn.cursor() as cursor:
+    sql_permission = "SELECT [Order],[permission_name] FROM [bloodtest].[dbo].[permission];"
+    cursor.execute(sql_permission)
+    dict_permission = dict(cursor.fetchall())
+
 class ID:
     
     def __init__(self,master,oldmaster=None):  
@@ -238,13 +244,24 @@ class ID:
     def changeedit(self):
         ##(f3)listbox轉換
         def listbox_event(event):
+            branch = self.f3_input_branch.get()
             idx = self.id_listbox.curselection()
-            slcid = self.id_listbox.get(idx)
+            slcid = self.id_listbox.get(idx)    #選取帳號(姓名)
+            self.edit_govid = [key for key, val in self.dict_govid_ac.items() if val == slcid]
+            if len(self.edit_govid)==1:
+                permission = self.acpwpermission[self.edit_govid[0]][2]
+                self.input_permission.configure(state='normal')
+                self.input_permission.set(permission)
+                self.input_permission.configure(state='disabled')
+            else:
+                tk.messagebox.showerror(title='檢驗醫學部(科)', message='科室內重名!請找管理員設定!')
+                return
             self.input_ID2.configure(state='normal')
             self.input_ID2.delete(0,tk.END)
             self.input_pwe2.delete(0,tk.END)
             self.input_ID2.insert(tk.END,slcid)
             self.input_pwe2.insert(tk.END,'*******')
+            # self.input_ID2.configure(state='normal')
             self.input_ID2.configure(state='disabled')
             self.chgpw_btn.configure(state='disabled')
         ##把frame3放到frame2上
@@ -283,10 +300,10 @@ class ID:
             text=" ",
             width=10
         )
-        self.spacer.grid(row=2,column=0,rowspan=3,)
+        self.spacer.grid(row=2,column=0,rowspan=4,)
         ##(f3)左手邊tk.listbox & 卷軸
         self.scrollbar = tk.Scrollbar(self.labelframe_3)
-        self.scrollbar.grid(row=2,column=2,rowspan=3,sticky='nsew')
+        self.scrollbar.grid(row=2,column=2,rowspan=4,sticky='nsew')
         self.id_listbox = tk.Listbox(
             self.labelframe_3,
             yscrollcommand=self.scrollbar.set,
@@ -294,7 +311,7 @@ class ID:
             font=('微軟正黑體',20)
         )
         # self.updatelist()
-        self.id_listbox.grid(row=2,column=1,rowspan=3,sticky='nsew',)
+        self.id_listbox.grid(row=2,column=1,rowspan=4,sticky='nsew',)
         self.scrollbar.config(command=self.id_listbox.yview)
         #(f3)listbox bind
         self.id_listbox.bind("<<ListboxSelect>>", listbox_event)        
@@ -305,33 +322,52 @@ class ID:
                     fg_color='#FFEEDD',
                     font=('微軟正黑體',20),
                     text_color="#000000",
-                    width=140,height=40
+                    justify="right",
+                    width=20,height=4
                     )
-        self.label_ID2.grid(row=2,column=3,pady=10,sticky='se')
+        self.label_ID2.grid(row=2,column=3,ipadx=40,pady=10,sticky='nse')
         self.label_pw2 = ctk.CTkLabel(
                     self.labelframe_3, 
                     text = "密碼:", 
                     fg_color='#FFEEDD',
                     font=('微軟正黑體',20),
                     text_color="#000000",
-                    width=140,height=40
+                    width=20,height=4
                     )
-        self.label_pw2.grid(row=3,column=3,pady=10,sticky='ne')
+        self.label_pw2.grid(row=3,column=3,ipadx=40,pady=10,sticky='nse')
+        self.label_permission = ctk.CTkLabel(
+                    self.labelframe_3, 
+                    text = "權限:", 
+                    fg_color='#FFEEDD',
+                    # fg_color='#FFFFFF',
+                    font=('微軟正黑體',20),
+                    text_color="#000000",
+                    width=20,height=4
+                    )
+        self.label_permission.grid(row=4,column=3,ipadx=40,pady=10,sticky='nse')
         self.input_ID2 = ctk.CTkEntry(
                     self.labelframe_3, 
                     width=120,height=40,
                     state='disabled'
                     )
-        self.input_ID2.grid(row=2,column=4,pady=10,sticky='sw')
+        self.input_ID2.grid(row=2,column=4,sticky='w')
         #(f3)double clicked ID bind
         self.input_ID2 .bind("<Double-Button-1>", self.clicklabelac)
         self.input_pwe2 = ctk.CTkEntry(
                     self.labelframe_3, 
                     width=120,height=40
                     )
-        self.input_pwe2.grid(row=3,column=4,pady=10,sticky='nw')
+        self.input_pwe2.grid(row=3,column=4,sticky='w')
         #(f3)double clicked password bind
         self.input_pwe2.bind("<Double-Button-1>", self.clicklabelpw)
+        self.input_permission = ctk.CTkComboBox(
+                    self.labelframe_3, 
+                    values=[values for values in dict_permission.values()],
+                    button_color='#FF9900',
+                    width=120,height=40,
+                    state='disabled'
+                    )
+        self.input_permission.grid(row=4,column=4,sticky='w')
         #(f3)下面修改按鍵
         self.chgpw_btn = ctk.CTkButton(
             self.labelframe_3,
@@ -341,7 +377,7 @@ class ID:
             fg_color='#FF9900',
             text_color='#000000',
             state='disabled')
-        self.chgpw_btn.grid(row=4,column=3,padx=40,sticky='n')
+        self.chgpw_btn.grid(row=5,column=3,padx=40,sticky='n')
         #(f3)刪除帳號按鍵
         self.del_btn = ctk.CTkButton(
             self.labelframe_3,
@@ -350,19 +386,25 @@ class ID:
             height=30,
             fg_color='#FF9900',
             text_color='#000000')
-        self.del_btn.grid(row=4,column=4,padx=40,sticky='n')
+        self.del_btn.grid(row=5,column=4,padx=40,sticky='n')
 ##(f3)修改帳號介面功能區    
     #(f3)更新listbox(MSSQL裡面有的帳號)
     def updatelist(self,event):
         branch = self.f3_input_branch.get()
         with coxn.cursor() as cursor:
-            query = "SELECT ac,pw  FROM [bloodtest].[dbo].[id] JOIN [bloodtest].[dbo].[hospital_code] ON [hospital_code].[code] = [id].[院區] WHERE [hospital_code].[院區]='%s';"%(branch)
+            query = """SELECT govid,ac,pw,[permission].[permission_name]  FROM [bloodtest].[dbo].[id] 
+                        JOIN [bloodtest].[dbo].[hospital_code] ON [hospital_code].[code] = [id].[院區]
+                        JOIN [bloodtest].[dbo].[permission] ON [permission].[Order] = [id].[permission]
+                        WHERE [hospital_code].[院區]='%s';"""%(branch)
             cursor.execute(query)
-            acpw = dict(cursor.fetchall())
+            # acpw = cursor.fetchall()
+            acpwpermission = cursor.fetchall()
+        self.acpwpermission = {item[0]: item[1:] for item in acpwpermission}
         # jsonfile = open('in.json','rb')
         # a = json.load(jsonfile)
         # ml = a['member']
-        idlist = [i for i in acpw.keys()]
+        self.dict_govid_ac = {item[0]: item[1] for item in acpwpermission}
+        idlist = [value for value in self.dict_govid_ac.values()]
         # for i in ml:
         #     x = i['ID']
         #     idlist.append(x)
@@ -380,29 +422,40 @@ class ID:
             self.input_ID2.configure(state='normal')
             tk.messagebox.showinfo(
                 title='檢驗醫學部(科)', 
-                message="""請修改帳號框中帳號""")
+                message="""請修改帳號框中帳號以及下方角色權限""")
             self.chgpw_btn.configure(state='normal')
+            self.input_permission.configure(state='normal')
         else:
             tk.messagebox.showerror(title='檢驗醫學部(科)', message="尚未選擇帳號!請選擇後再逕行修改!")
             return
     #(f3)修改帳號功能鍵
     def editac(self):
         editid = self.input_ID2.get()
+        edit_permission = self.input_permission.get()
         if editid !="":
-            if tk.messagebox.askyesno(title='檢驗醫學部(科)', message='確認將%s修改為%s?'%(self.toedit,editid)):
-                state = editaccount(self.toedit,editid)
+            if tk.messagebox.askyesno(
+                title='檢驗醫學部(科)',
+                message="""確認將%s修改為%s?
+角色權限更改為:%s"""%(self.toedit,editid,edit_permission)):
+                state = editaccount(self.edit_govid,editid,edit_permission)
             else:
                 return
             if state == "success":
                 tk.messagebox.showinfo(title='檢驗醫學部(科)', message='修改成功!')
-                self.input_ID2.configure(state='normal')
-                self.input_ID2.delete(0,tk.END)
-                self.input_ID2.configure(state='disable')
-                self.input_pwe2.delete(0,tk.END)
-                self.clearlist()
-                self.chgpw_btn.configure(state='disabled')
+
+            elif state == "admin":
+                tk.messagebox.showerror(title='檢驗醫學部(科)', message='不可更動為程式管理員!請重新選擇角色權限')
+            elif state == "nopermission":
+                tk.messagebox.showerror(title='檢驗醫學部(科)', message='角色更動錯誤!請下拉選擇正確角色名稱!')
             else:
                 tk.messagebox.showerror(title='檢驗醫學部(科)', message='發生未知錯誤，請聯絡管理員')
+            self.input_ID2.configure(state='normal')
+            self.input_ID2.delete(0,tk.END)
+            self.input_ID2.configure(state='disable')
+            self.input_pwe2.delete(0,tk.END)
+            self.input_permission.configure(state='disabled')
+            self.clearlist()
+            self.chgpw_btn.configure(state='disabled')
         else:
             tk.messagebox.showerror(title='檢驗醫學部(科)', message='尚未選擇帳號!請選擇後再逕行修改!')
             return

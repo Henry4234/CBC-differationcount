@@ -13,9 +13,10 @@ from verifyAccount import changepw_sql
 # from counter import getaccount
 # global account
 # account = sys.argv[1]
-def get_accountpermission(acount):
-    global Baccount
+def get_accountpermission(acount,govid):
+    global Baccount,Govid
     Baccount = str(acount)
+    Govid = str(govid)
 
     return None
 
@@ -259,7 +260,7 @@ class Basedesk:
         from counter import Count
         self.master.withdraw() #把basedesk隱藏
         self.newWindow = ctk.CTkToplevel()
-        counter.getaccount(Baccount)
+        counter.getaccount(Baccount,Govid)
         C = Count(self.newWindow,self.master)
     def urinesedimentcounter(self):
         self.destroy()
@@ -282,7 +283,7 @@ class Basedesk:
         from counter_practise import PRACTISE
         self.master.withdraw() #把basedesk隱藏
         self.newWindow = ctk.CTkToplevel()
-        counter_practise.getaccount(Baccount)
+        counter_practise.getaccount(Baccount,Govid)
         P = PRACTISE(self.newWindow,self.master)
     def image_practise(self,level):
         import practice_image

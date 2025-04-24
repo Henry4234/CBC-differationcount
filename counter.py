@@ -14,11 +14,11 @@ freq = 600  # Hz
 duration_1 = 900  # millisecond
 freq_1 = 1000  # Hz
 
-def getaccount(acount):
-    global Baccount
+def getaccount(acount,govid):
+    global Baccount,Govid
     Baccount = str(acount) 
+    Govid = str(govid)
     # Baccount = "henry423"
-    print(Baccount)
     return None
 
 def resource_path(relative_path):
@@ -719,6 +719,17 @@ class Count:    #建立計數器
             text_color="#000000",
             )
         self.input_needcountval.grid(row=10,column=5)
+        self.btn_phrase = ctk.CTkButton(
+            self.frame_counter,
+            text="預設片語",
+            command= self.add_phrase,
+            fg_color="#CCCCCC",
+            corner_radius=8,
+            width=70,height=30,
+            font=('微軟正黑體',20),
+            text_color="#000000"
+        )
+        self.btn_phrase.grid(row=10,column=8,columnspan=2)
     # def gui_arrang(self):
         self.frame_exam.grid(row=0, column=0,columnspan=2,pady=20,sticky=tk.W)
         self.frame_time.grid(row=1, column=0,padx=3,ipadx=20)
@@ -808,6 +819,51 @@ class Count:    #建立計數器
     def stop_clock(self):
         self.doTick = False
 
+    def add_phrase(self):
+        style = ttk.Style()
+        style.configure("Treeview",borderwidth=1,relief='solid',font=(None,14))
+        window_phrase = ctk.CTkToplevel()
+        window_phrase.title("片語選擇")
+        window_phrase.geometry("400x300")
+        # 創建 Treeview 表格
+        columns = ("#1", "#2")
+        tree = ttk.Treeview(window_phrase, columns=columns, show="headings",style="Treeview")
+        # 設置表頭
+        tree.heading("#1", text="編號")
+        tree.heading("#2", text="片語")
+        # 調整欄位的寬度
+        tree.column("#1", width=50, anchor='center')  # 編號欄位寬度縮小
+        tree.column("#2", width=300, anchor='w')     # 片語欄位寬度增大
+        # 插入數據到表格
+        data = [
+            ("1","Preliminary report"),
+            ("2","PANIC VALUE ! 危險值通知 !"),
+            ("3","NRBC五顆以上，需補傳NRBC"),
+            ("4","Auer rod(+)"),
+            ("5","Smudge cell (+)"),
+            ("6","Faggot cell(+)"),
+            ("7","Rieder cell(+)"),
+            ("8","RBC Rouleaux formation(+)"),
+            ("9","Abnormal lymphocyte with large/small cleaved"),
+            ("10","Abnormal lymphoid cells with villous or cytoplasmic projections"),
+            ("11","Abn-Lym with irregular nucleus")
+        ]
+        for item in data:
+            tree.insert("", "end", values=item)
+        tree.pack(expand=True,fill="both")
+        # 雙擊事件處理函數
+        def on_double_click(event):
+            selected_item = tree.focus()  # 獲取當前選中的項目
+            if selected_item:
+                selected_table = tree.item(selected_item, "values")
+                selected_phrase = selected_table[1]  # 選取 "片語" 欄位的內容
+                
+                window_phrase.destroy()  # 關閉 new_window 視窗
+            else:
+                return
+            self.input_testcomment.insert("end",", " + str(selected_phrase))
+        # 將雙擊事件與表格綁定
+        tree.bind("<Double-1>", on_double_click)
     
     #函式判別上/下數、判別是否數錯方向
     def pending(self,event):
@@ -1021,7 +1077,7 @@ class Count:    #建立計數器
                     ans.append(rawcount)
             ##確認輸入者id
             with coxn.cursor() as cursor:
-                cursor.execute("SELECT No FROM[bloodtest].[dbo].[id] WHERE [ac]='%s';" %(Baccount))
+                cursor.execute("SELECT No FROM[bloodtest].[dbo].[id] WHERE [govid]='%s';" %(Govid))
                 ac = cursor.fetchone()[0]
             ##存入SQL
             with coxn.cursor() as cursor:

@@ -1,4 +1,4 @@
-import sys, os,shutil
+import sys, os,shutil,verifyAccount
 import tkinter as tk
 from tkinter import ttk
 from tkinter import RIDGE, DoubleVar, StringVar, ttk, messagebox,IntVar, filedialog
@@ -12,6 +12,11 @@ def getaccount(acount):
     global Baccount
     Baccount = str(acount)
     # print(Baccount)
+    return None
+#取得院區代碼
+def gethos(hospital):
+    global Hoscode
+    Hoscode = str(hospital)
     return None
 
 def resource_path(relative_path):
@@ -109,6 +114,28 @@ class Import:
         )
         self.welcome.pack()
         self.welcome.place(relx=0.5,rely=0.05,anchor=tk.CENTER)
+        self.label_hos = ctk.CTkLabel(
+            self.master,
+            text="院區選擇:",
+            bg_color='#FFEEDD',
+            font=('微軟正黑體',30),
+            text_color='#000000',
+            fg_color="#FFEEDD",
+            width=240
+        )
+        self.label_hos.pack()
+        self.label_hos.place(relx=0.1,rely=0.05,anchor=tk.CENTER)
+        self.hospital_name = ctk.CTkLabel(
+            self.master,
+            text=str(verifyAccount.hos_matrix(Hoscode)),
+            bg_color='#FFEEDD',
+            font=('微軟正黑體',30),
+            text_color='#0072E3',
+            fg_color="#FFEEDD",
+            width=120
+        )
+        self.hospital_name.pack()
+        self.hospital_name.place(relx=0.23,rely=0.05,anchor=tk.CENTER)
         ###建立分頁窗格
         self.tab = ctk.CTkTabview(
             self.master,
@@ -418,6 +445,13 @@ class Import:
         self.labelframe_nok.pack_forget()
         self.labelframe_vfnok.pack_forget()
         self.labelframe_vfok.pack_forget()
+        # self.select_hos(Hoscode)
+    ##分成院區上傳或者行政中心上傳
+    # def select_hos(self,Hoscode):
+    #     if Hoscode=='D':
+    #         pass
+    #     else:
+
     ##選擇檔案後，驗證是否匯入成功
     def selectfile(self):
         global testtype
@@ -463,7 +497,7 @@ class Import:
         except ValueError:
             self.labelframe_nok.place(relx=0.15,rely=0.42,anchor=tk.CENTER)
             self.labelframe_nok.tkraise()
-            tk.messagebox.showerror('土城長庚醫院檢驗科', message='資料格式不符，請重新選擇檔案')
+            tk.messagebox.showerror('檢驗醫學部(科)', message='資料格式不符，請重新選擇檔案')
             return None
         except FileNotFoundError:
             self.labelframe_nok.place(relx=0.15,rely=0.42,anchor=tk.CENTER)
@@ -527,7 +561,7 @@ class Import:
         try:
             createtable(self.verifyframe,7,9,2,lst=db)
         except IndexError:
-            tk.messagebox.showerror("土城長庚醫院檢驗科", message='檔案格式不符，請檢查後再上傳')
+            tk.messagebox.showerror("檢驗醫學部(科)", message='檔案格式不符，請檢查後再上傳')
             self.labelframe_nok.place(relx=0.15,rely=0.42,anchor=tk.CENTER)
             self.labelframe_nok.tkraise()
             return None
@@ -604,7 +638,7 @@ class Import:
         except ValueError:
             self.labelframe_nok.place(relx=0.15,rely=0.42,anchor=tk.CENTER)
             self.labelframe_nok.tkraise()
-            tk.messagebox.showerror('土城長庚醫院檢驗科', message='資料格式不符，請重新選擇檔案')
+            tk.messagebox.showerror('檢驗醫學部(科)', message='資料格式不符，請重新選擇檔案')
             return None
         except FileNotFoundError:
             self.labelframe_nok.place(relx=0.15,rely=0.42,anchor=tk.CENTER)
@@ -679,7 +713,7 @@ class Import:
             self.labelframe_ok.place_forget()
             self.labelframe_nok.place(relx=0.15,rely=0.42,anchor=tk.CENTER)
             self.labelframe_nok.tkraise()
-            tk.messagebox.showerror('土城長庚醫院檢驗科', message='資料格式不符，請重新選擇檔案')
+            tk.messagebox.showerror('檢驗醫學部(科)', message='資料格式不符，請重新選擇檔案')
             return None
         except FileNotFoundError:
             self.labelframe_nok.place(relx=0.15,rely=0.42,anchor=tk.CENTER)
@@ -853,10 +887,14 @@ class Import:
         # print(rawdata,lst_r,lst_a)
         #匯入SQL
         with coxn.cursor() as cursor:
+        #Hoscode轉換
+            sql_hos_no="SELECT [No] FROM [hospital_code] WHERE[code]='%s'"%(Hoscode)
+            cursor.execute(sql_hos_no)
+            hos_no = int(cursor.fetchone()[0])
         #匯入bloodinfo table
             bloodinfo_input = """INSERT INTO [bloodtest].[dbo].[bloodinfo]
-            ("year","smear_id","gender","age","count_value","comment")
-            VALUES (%s,'%s','%s',%d,%d,'%s');""" %(self.testyear,self.testname,self.gender,self.age,self.count_value,self.comment)
+            ("year","smear_id","gender","age","count_value","comment","branch")
+            VALUES (%s,'%s','%s',%d,%d,'%s',%d);""" %(self.testyear,self.testname,self.gender,self.age,self.count_value,self.comment,hos_no)
         #匯入bloodinfo_cbc table
             bloodinfocbc_input = """INSERT INTO [bloodtest].[dbo].[bloodinfo_cbc]
             ("smear_id","WBC","RBC","HB","Hct","MCV","MCH","MCHC","RDW","plt")

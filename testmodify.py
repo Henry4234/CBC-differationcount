@@ -37,6 +37,12 @@ def resource_path(relative_path):
 
     return os.path.join(base_path, relative_path)
 
+#取得院區代碼
+def gethos(hospital):
+    global Hoscode
+    Hoscode = str(hospital)
+    return None
+
 class Modify:
     
     def __init__(self,master,oldmaster=None):  
@@ -49,9 +55,13 @@ class Modify:
         # rawdata = json.load(jsonfile)
         # self.rawdata = pd.DataFrame(rawdata["blood"])
         with coxn.cursor() as cursor:
+            # sql_hospital="SELECT DISTINCT [year] FROM [bloodtest].[dbo].[bloodinfo] JOIN [hospital_code] ON [bloodinfo].[branch]=[hospital_code].[No] WHERE [];"
             cursor.execute("SELECT DISTINCT [year] FROM [bloodtest].[dbo].[bloodinfo];")
         # self.testyear = self.rawdata['year'].unique().tolist()
             self.testyear = [str(row[0]) for row in cursor.fetchall()]
+        with coxn.cursor() as cursor:
+            cursor.execute("SELECT [院區] FROM [bloodtest].[dbo].[hospital_code];")
+            self.hospital = [str(row[0]) for row in cursor.fetchall()]
         # 給主視窗設定標題內容  
         self.master.title("考題設定")  
         self.master.geometry('900x650')
@@ -193,16 +203,38 @@ class Modify:
                     width=120,height=120
                     )
         self.label_2.grid(row=0,column=0,columnspan=5,sticky='nsew')
-        #(f2)年份標籤 & 下拉欄位
+        #(f2)院區標籤 & 年份標籤 & 下拉欄位
+        self.label_hospital= ctk.CTkLabel(
+                    self.labelframe_2, 
+                    text = "請選擇院區:", 
+                    fg_color='#FFEEDD',
+                    font=('微軟正黑體',20),
+                    text_color="#000000",
+                    width=140,height=40
+                    )
+        self.label_hospital.grid(row=1,column=0,pady=10,sticky='w')
+        self.input_hospital= ctk.CTkComboBox(
+                    master = self.labelframe_2,
+                    # command= None,
+                    command= self.updateyearcombobox,
+                    values=self.hospital,
+                    text_color='#000000',
+                    fg_color='#F0F0F0',
+                    button_color='#FF9900',
+                    state="readonly",
+                    width=140,height=40,
+                    font=('微軟正黑體',16,)
+                    )
+        self.input_hospital.grid(row=1,column=1,padx=10,pady=10,columnspan=2,sticky='w')
         self.label_year = ctk.CTkLabel(
                     self.labelframe_2, 
                     text = "請選擇考核年度:", 
                     fg_color='#FFEEDD',
                     font=('微軟正黑體',20),
                     text_color="#000000",
-                    width=140,height=40
+                    width=70,height=40
                     )
-        self.label_year.grid(row=1,column=0,pady=10,sticky='w')
+        self.label_year.grid(row=1,column=3,pady=10,sticky='w')
         self.input_year = ctk.CTkComboBox(
                     master = self.labelframe_2,
                     # command= None,
@@ -215,7 +247,7 @@ class Modify:
                     width=120,height=40,
                     font=('微軟正黑體',16,)
                     )
-        self.input_year.grid(row=1,column=1,padx=10,pady=10,columnspan=2,sticky='w')
+        self.input_year.grid(row=1,column=4,pady=10,sticky='w')
         #(f2)左邊考題選擇listbox & 旁邊捲軸
         self.scrollbar = tk.Scrollbar(self.labelframe_2)
         
@@ -401,6 +433,14 @@ class Modify:
             fg_color='#FF0000',
             text_color='#000000')
         self.delete_btn.grid(row=5,column=4,padx=20,pady=5)
+        if Hoscode!='D':
+            with coxn.cursor() as cursor:
+                sql_hos = "SELECT [院區] FROM [bloodtest].[dbo].[hospital_code] WHERE [code]='%s';"%(Hoscode)
+                cursor.execute(sql_hos)
+                self.hos_name=str(cursor.fetchone()[0])
+            self.input_hospital.set(self.hos_name)
+            self.updateyearcombobox(self)
+            self.input_hospital.configure(state='disabled')
 
 ##左手邊按鍵區域 血液考題設定/血液參數設定/尿液考題設定/離開
     #(f3)參數設定介面介面
@@ -422,16 +462,38 @@ class Modify:
                     width=120,height=120,
                     )
         self.label_3.grid(row=0,column=0,columnspan=6,sticky='nsew')
-        #(f3)年份標籤 & 下拉欄位
+        #(f3)年份院區標籤 & 下拉欄位
+        self.f3_label_hospital = ctk.CTkLabel(
+                    self.labelframe_3, 
+                    text = "請選擇院區:", 
+                    fg_color='#FFEEDD',
+                    font=('微軟正黑體',20),
+                    text_color="#000000",
+                    width=140,height=40
+                    )
+        self.f3_label_hospital.grid(row=1,column=0,pady=10,sticky='w')
+        self.f3_input_hospital = ctk.CTkComboBox(
+                    master = self.labelframe_3,
+                    # command= None,
+                    command= self.f3_updateyearcombobox,
+                    values=self.hospital,
+                    text_color='#000000',
+                    fg_color='#F0F0F0',
+                    button_color='#FF9900',
+                    state="readonly",
+                    width=140,height=40,
+                    font=('微軟正黑體',16,)
+                    )
+        self.f3_input_hospital.grid(row=1,column=1,padx=10,pady=10,columnspan=2,sticky='w')
         self.f3_label_year = ctk.CTkLabel(
                     self.labelframe_3, 
                     text = "請選擇考核年度:", 
                     fg_color='#FFEEDD',
                     font=('微軟正黑體',20),
                     text_color="#000000",
-                    width=140,height=40
+                    width=70,height=40
                     )
-        self.f3_label_year.grid(row=1,column=0,pady=10,sticky='w')
+        self.f3_label_year.grid(row=1,column=3,pady=10,sticky='w')
         self.f3_input_year = ctk.CTkComboBox(
                     master = self.labelframe_3,
                     # command= None,
@@ -444,7 +506,7 @@ class Modify:
                     width=120,height=40,
                     font=('微軟正黑體',16,)
                     )
-        self.f3_input_year.grid(row=1,column=1,padx=10,pady=10,columnspan=2,sticky='w')
+        self.f3_input_year.grid(row=1,column=4,pady=10,columnspan=2,sticky='w')
         #(f3)左邊考題選擇listbox & 旁邊捲軸
         self.scrollbar = tk.Scrollbar(self.labelframe_3)
         
@@ -627,6 +689,15 @@ class Modify:
             fg_color='#FF0000',
             text_color='#000000')
         self.f3_delete_btn.grid(row=5,column=4,padx=20,pady=5)
+        if Hoscode!='D':
+            with coxn.cursor() as cursor:
+                sql_hos = "SELECT [院區] FROM [bloodtest].[dbo].[hospital_code] WHERE [code]='%s';"%(Hoscode)
+                cursor.execute(sql_hos)
+                self.hos_name=str(cursor.fetchone()[0])
+            self.f3_input_hospital.set(self.hos_name)
+            self.f3_updateyearcombobox(self)
+            self.f3_input_hospital.configure(state='disabled')
+    
 
     #(f1)離開
     def exit(self,oldmaster):
@@ -752,11 +823,26 @@ class Modify:
             else:
                 return
 ##(f2)事件連結
+    #選擇院區之後，更新year_combobox
+    def updateyearcombobox(self,event):
+        #選擇院區之前，先把year & listbox清空
+        self.input_year.set("")
+        self.test_listbox.delete(0,tk.END)
+        self.hos_name=self.input_hospital.get()
+        with coxn.cursor() as cursor:
+            cursor.execute("""SELECT DISTINCT [year] FROM [bloodtest].[dbo].[bloodinfo] 
+JOIN [bloodtest].[dbo].[hospital_code] ON [bloodinfo].[branch]=[hospital_code].[No] 
+WHERE [hospital_code].[院區]='%s';"""%(self.hos_name))
+            sql_hosyear = [str(row[0]) for row in cursor.fetchall()]
+        self.input_year.configure(values=sql_hosyear)
     #選擇年份之後，更新listbox(JSON裡面有的考題)
+    
     def updatelist(self,event):
         #建立年分與smearid的dict
         with coxn.cursor() as cursor:
-            cursor.execute('SELECT "year","smear_id" FROM [bloodtest].[dbo].[bloodinfo];')
+            cursor.execute("""SELECT "year","smear_id" FROM [bloodtest].[dbo].[bloodinfo]
+JOIN [bloodtest].[dbo].[hospital_code] ON [bloodinfo].[branch]=[hospital_code].[No]
+WHERE [hospital_code].[院區]='%s';"""%(self.hos_name))
             sql_yearid = cursor.fetchall()
         yearid = dict()
         for row in sql_yearid:
@@ -949,11 +1035,25 @@ class Modify:
             else:
                 return
 ##(f3)事件連結
+    #選擇院區之後，更新year_combobox
+    def f3_updateyearcombobox(self,event):
+        #選擇院區之前，先把year & listbox清空
+        self.f3_input_year.set("")
+        self.f3_test_listbox.delete(0,tk.END)
+        self.hos_name=self.f3_input_hospital.get()
+        with coxn.cursor() as cursor:
+            cursor.execute("""SELECT DISTINCT [year] FROM [bloodtest].[dbo].[bloodinfo] 
+JOIN [bloodtest].[dbo].[hospital_code] ON [bloodinfo].[branch]=[hospital_code].[No] 
+WHERE [hospital_code].[院區]='%s';"""%(self.hos_name))
+            sql_hosyear = [str(row[0]) for row in cursor.fetchall()]
+        self.f3_input_year.configure(values=sql_hosyear)
     #(f3)選擇年份之後，更新listbox(JSON裡面有的考題)
     def f3_updatelist(self,event):
         #取得combobox選擇的年份
         with coxn.cursor() as cursor:
-            cursor.execute('SELECT "year","smear_id" FROM [bloodtest].[dbo].[bloodinfo];')
+            cursor.execute("""SELECT "year","smear_id" FROM [bloodtest].[dbo].[bloodinfo]
+JOIN [bloodtest].[dbo].[hospital_code] ON [bloodinfo].[branch]=[hospital_code].[No]
+WHERE [hospital_code].[院區]='%s';"""%(self.hos_name))
             sql_yearid = cursor.fetchall()
         yearid = dict()
         for row in sql_yearid:

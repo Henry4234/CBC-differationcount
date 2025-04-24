@@ -189,27 +189,43 @@ def delaccount(account):
     #     r.close()
     return "success"
 ##(UPDATE)edit account(for manager)
-def editaccount(oldaccount,newaccount):
+def editaccount(govid,newaccount,permission):
+    ##需要先檢查是否更動為admin
+    #名稱要轉為Order
     with coxn.cursor() as cursor:
-        sql = """UPDATE [bloodtest].[dbo].[id] SET [ac] = '%s' WHERE [ac]='%s';"""%(newaccount,oldaccount)
-        cursor.execute(sql)
-    coxn.commit()
-    # jsonfile = open('in.json','rb')
-    # a = json.load(jsonfile)
-    # ml = a['member']
-    # md = {}
-    # for i in ml:
-    #     x = i['ID']
-    #     y = i['token']
-    #     md[x] = y
-    # IL = [key for key in md.keys()]
-    # idx = IL.index(oldaccount)
-    # ml[idx]["ID"] = newaccount
-    # # print(ml)
-    # with open('in.json','w') as r:
-    #     json.dump(a,r)
-    #     r.close()
-    return "success"
+        sql_permission="SELECT [permission_name],[Order] FROM permission;"
+        cursor.execute(sql_permission)
+        dict_permission = dict(cursor.fetchall())
+    try:
+        update_permission_code = dict_permission[permission]
+ 
+        if update_permission_code==0:
+            return "admin"
+    except KeyError:
+        return "nopermission"
+    else:
+        with coxn.cursor() as cursor:
+            sql = """UPDATE [bloodtest].[dbo].[id] 
+            SET [ac] = '%s', [permission]=%d
+            WHERE [govid]='%s';"""%(newaccount,update_permission_code,govid[0])
+            cursor.execute(sql)
+        coxn.commit()
+        # jsonfile = open('in.json','rb')
+        # a = json.load(jsonfile)
+        # ml = a['member']
+        # md = {}
+        # for i in ml:
+        #     x = i['ID']
+        #     y = i['token']
+        #     md[x] = y
+        # IL = [key for key in md.keys()]
+        # idx = IL.index(oldaccount)
+        # ml[idx]["ID"] = newaccount
+        # # print(ml)
+        # with open('in.json','w') as r:
+        #     json.dump(a,r)
+        #     r.close()
+        return "success"
 
 def verifyAccountData_sql(account,password):
     # with open('pw.pickle','rb') as usr_file:
