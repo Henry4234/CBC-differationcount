@@ -324,6 +324,10 @@ def verifyAccountData_lms(govid,account,hospital_name):
     if govid in dict_id:
         if dict_id[govid][0]==account and dict_id[govid][2]==hospital_code:
             return dict_id[govid][1]
+        elif dict_id[govid][0]==account and dict_id[govid][2]!=hospital_code:
+            return "hospitalcodeerror"
+        else:
+            return "empty"
     #不在資料庫中彈出是否註冊的框
     else:
         for no_govid_item in no_govid:
