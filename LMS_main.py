@@ -19,13 +19,14 @@ ht = sys.argv[1]
 ac = sys.argv[2]
 govid = sys.argv[3]
 
-# print(ac,ht)
+print(ac,ht,govid)
 
 class LMS:
 
     def __init__(self):
         self.hospital_code = verifyAccount.hos_matrix(ht)
         self.verifyResult = verifyAccount.verifyAccountData_lms(govid,ac,self.hospital_code)
+        print(self.verifyResult)
         self.login_result()
     def login_result(self):
         if self.verifyResult=='administrator':  
@@ -57,7 +58,12 @@ class LMS:
                 tk.messagebox.showinfo(title='檢驗醫學部(科)', message='新增使用者成功!')
                 self.verifyResult='user'
                 self.loginuser()
-        
+        elif self.verifyResult=='hospitalcodeerror':
+            if tk.messagebox.askyesno(title='檢驗醫學部(科)', message='帳號:%s\n目前登入院區:%s\n跨院區登入?'%(ac,self.hospital_code)):
+                self.loginuser()
+            else:
+                tk.messagebox.showerror(title='檢驗醫學部(科)', message='參數錯誤，請聯繫管理人員!')
+                return
         elif self.verifyResult=='empty':
             tk.messagebox.showerror(title='檢驗醫學部(科)', message='參數錯誤，請聯繫管理人員!')
             return
@@ -65,7 +71,7 @@ class LMS:
     def loginuser(self):
         self.newWindow = ctk.CTk()
         # root = ctk.CTk()
-        basedesk.get_accountpermission(ac,govid)
+        basedesk.get_accountpermission(ac,govid,verifyAccount.hos_rematrix(self.hospital_code))
         B = basedesk.Basedesk(self.newWindow)
         self.newWindow.mainloop()
     #admin登入

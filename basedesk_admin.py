@@ -29,7 +29,7 @@ class Basedesk_Admin:
         # self.root = ctk.CTk()
         ctk.set_default_color_theme("dark-blue")  
         # 給主視窗設定標題內容  
-        self.master.title("形態學考核及教育程式-v4.2")  
+        self.master.title("形態學考核及教育程式-v5.3")  
         self.master.geometry('650x600')
         self.master.config(background='#FFEEDD') #設定背景色
         # global account_1
@@ -87,6 +87,12 @@ class Basedesk_Admin:
             fg_color="#95C8EF",
             bg_color="#FFEEDD")
         self.labelframe_5.pack()
+        self.labelframe_link = ctk.CTkFrame(
+            self.master,
+            # text='5. 數位學習網',
+            fg_color="#BDF5CB",
+            bg_color="#FFEEDD")
+        self.labelframe_link.pack()
         ##各類功能選單
         self.button_blood=ctk.CTkButton(
             self.labelframe_1, 
@@ -239,6 +245,16 @@ class Basedesk_Admin:
             text_color="#000000"
             )
         self.button_4.pack(padx=10, pady=15)
+        self.button_link=ctk.CTkButton(
+            self.labelframe_link,
+            command = self.openlearning_link, 
+            text = "醫檢數位學習網", 
+            fg_color='#64E864',
+            width=160,height=40,
+            font=('微軟正黑體',22),
+            text_color="#000000"
+            )
+        self.button_link.pack(padx=10, pady=15)
         self.button_5=ctk.CTkButton(
             self.master, 
             command = lambda: self.logout_interface(oldmaster), 
@@ -273,6 +289,7 @@ class Basedesk_Admin:
             text_color="#000000"
             )
         self.button_changepw.pack()
+
         self.cc = ctk.CTkLabel(
             self.master, 
             fg_color="#FFEEDD",
@@ -286,7 +303,7 @@ class Basedesk_Admin:
             self.master, 
             fg_color="#FFEEDD",
             bg_color='#FFEEDD',
-            text='@version -4.2',
+            text='@version -5.3',
             text_color="#000000",
             font=("Calibri",12),
             width=80)
@@ -304,6 +321,7 @@ class Basedesk_Admin:
         self.labelframe_3.place(relx=0.85,rely=0.49, anchor=tk.CENTER)
         self.labelframe_4.place(relx=0.85,rely=0.78, anchor=tk.CENTER)
         self.labelframe_5.place(relx=0.31,rely=0.78, anchor=tk.CENTER)
+        self.labelframe_link.place(relx=0.17,rely=0.65, anchor=tk.CENTER)
         self.permission_able()
     def permission_able(self):
         if Permission=="useradmin":
@@ -390,7 +408,7 @@ class Basedesk_Admin:
         from counter_practise import PRACTISE
         self.master.withdraw() #把basedesk隱藏
         self.newWindow = ctk.CTkToplevel()
-        counter_practise.getaccount(Baccount,Govid)
+        counter_practise.getaccount(Baccount,Govid,Hos_code)
         P = PRACTISE(self.newWindow,self.master)
     def image_practise(self,level):
         import practice_image
@@ -457,6 +475,10 @@ class Basedesk_Admin:
         self.master.withdraw() #把basedesk隱藏
         self.newWindow = ctk.CTkToplevel()
         I = ID(self.newWindow,self.master)
+    def openlearning_link(self):   
+        import webbrowser
+        url="https://cghlabm.cgmh.org.tw/course/view.php?id=884"
+        webbrowser.open(url,new=2)
     def logout_interface(self,oldmaster):
         if tk.messagebox.askyesno(title='檢驗醫學部(科)', message='確定要登出嗎?', ):
             tk.messagebox.showinfo(title='檢驗醫學部(科)', message='已登出!')

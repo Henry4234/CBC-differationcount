@@ -14,10 +14,11 @@ freq = 600  # Hz
 duration_1 = 900  # millisecond
 freq_1 = 1000  # Hz
 
-def getaccount(acount,govid):
-    global Baccount,Govid
+def getaccount(acount,govid,hoscode):
+    global Baccount,Govid,Hoscode
     Baccount = str(acount) 
     Govid = str(govid)
+    Hoscode = str(hoscode)
     # Baccount = "henry423"
     return None
 
@@ -42,17 +43,7 @@ finally:
     coxn = pyodbc.connect(connection_string)
 
 
-####年份跟ID####
-with coxn.cursor() as cursor:
-    cursor.execute('SELECT "year","smear_id" FROM [bloodtest].[dbo].[bloodinfo];')
-    sql_yearid = cursor.fetchall()
-yearid = dict()
-for row in sql_yearid:
-    sql_year, smear_id = row
-    sql_year = str(sql_year)
-    if sql_year not in yearid:
-        yearid[sql_year] = []
-    yearid[sql_year].append(smear_id)
+
 
 class PRACTISE:    #建立計數器
     def __init__(self,master,oldmaster=None):
@@ -63,8 +54,24 @@ class PRACTISE:    #建立計數器
         jsonfile = open(resource_path('testdata\data_new.json'),'rb')
         rawdata = json.load(jsonfile)
         self.rawdata = pd.DataFrame(rawdata["blood"])
+        
+        ####年份跟ID####
+        with coxn.cursor() as cursor:
+            cursor.execute("""SELECT [bloodinfo].[year],[bloodinfo].[smear_id]
+        FROM [bloodtest].[dbo].[bloodinfo]
+        JOIN [bloodtest].[dbo].[hospital_code] ON [hospital_code].[No] = [bloodinfo].[branch]
+        WHERE[hospital_code].[code]='%s';"""%(Hoscode))
+            sql_yearid = cursor.fetchall()
+        self.yearid = dict()
+        for row in sql_yearid:
+            sql_year, smear_id = row
+            sql_year = str(sql_year)
+            if sql_year not in self.yearid:
+                self.yearid[sql_year] = []
+            self.yearid[sql_year].append(smear_id)
+        
         # self.testyear = self.rawdata['year'].unique().tolist()
-        self.testyear = list(yearid.keys())
+        self.testyear = list(self.yearid.keys())
         self.testlist = []
         # for item in self.rawdata:
         #     self.testdict[item["year"]].append(item["ID"])
@@ -968,7 +975,7 @@ class PRACTISE:    #建立計數器
         testno = self.input_exam1.get()
         # fliter = (self.rawdata['year'] == testno)
         # self.testlist = self.rawdata[fliter]['ID']
-        self.testlist = yearid[testno]
+        self.testlist = self.yearid[testno]
         self.input_exam2.configure(values=self.testlist)
         for key in self.info_cbc:
             self.info_cbc[key].set(0.0)
