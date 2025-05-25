@@ -13,10 +13,11 @@ from verifyAccount import changepw_sql
 # from counter import getaccount
 # global account
 # account = sys.argv[1]
-def get_accountpermission(acount,govid):
-    global Baccount,Govid
+def get_accountpermission(acount,govid,hoscode):
+    global Baccount,Govid,Hos_code
     Baccount = str(acount)
     Govid = str(govid)
+    Hos_code = str(hoscode)
 
     return None
 
@@ -28,7 +29,7 @@ class Basedesk:
         super().__init__()
         ctk.set_default_color_theme("dark-blue")  
         # 給主視窗設定標題內容  
-        self.master.title("形態學考核及教育程式-v4.2")  
+        self.master.title("形態學考核及教育程式-v5.3")  
         self.master.geometry('800x650')
         self.master.config(background='#FFEEDD') #設定背景色
         global account_1
@@ -78,6 +79,13 @@ class Basedesk:
             bg_color="#FFEEDD"
             )
         self.labelframe_3.pack()
+        self.labelframe_link = ctk.CTkFrame(
+            self.master,
+            # text='3. 數位學習網',
+            fg_color="#BDF5CB",
+            bg_color="#FFEEDD"
+            )
+        self.labelframe_link.pack()
         ##各類功能選單
         self.button_blood=ctk.CTkButton(
             self.labelframe_1, 
@@ -150,6 +158,16 @@ class Basedesk:
             text_color="#000000",
             )
         self.button_search.pack(padx=10, pady=25)
+        self.button_link=ctk.CTkButton(
+            self.labelframe_link,
+            command = self.openlearning_link, 
+            text = "醫檢數位學習網", 
+            fg_color='#64E864',
+            width=200,height=70,
+            font=('微軟正黑體',22),
+            text_color="#000000"
+            )
+        self.button_link.pack(padx=10, pady=25)
         self.button_logout=ctk.CTkButton(
             self.master, 
             command = lambda: self.logout_interface(oldmaster), 
@@ -196,7 +214,7 @@ class Basedesk:
             self.master, 
             fg_color="#FFEEDD",
             bg_color='#FFEEDD',
-            text='@version -4.2',
+            text='@version -5.3',
             text_color="#000000",
             font=("Calibri",12),
             width=80)
@@ -210,8 +228,10 @@ class Basedesk:
         self.cc.place(relx=1, rely=1,anchor=tk.SE) 
         self.versioninfo.place(relx=0, rely=1,anchor=tk.SW) 
         self.labelframe_1.place(relx=0.5,rely=0.34, anchor=tk.CENTER)
-        self.labelframe_2.place(relx=0.5,rely=0.7, anchor=tk.CENTER)
+        self.labelframe_2.place(relx=0.775,rely=0.7, anchor=tk.CENTER)
         self.labelframe_3.place(relx=0.5,rely=0.5, anchor=tk.CENTER)
+        self.labelframe_link.place(relx=0.225,rely=0.7, anchor=tk.CENTER)
+
     def changepw(self):
         def ok():
             oldpw = self.input_oldpw.get()
@@ -283,7 +303,7 @@ class Basedesk:
         from counter_practise import PRACTISE
         self.master.withdraw() #把basedesk隱藏
         self.newWindow = ctk.CTkToplevel()
-        counter_practise.getaccount(Baccount,Govid)
+        counter_practise.getaccount(Baccount,Govid,Hos_code)
         P = PRACTISE(self.newWindow,self.master)
     def image_practise(self,level):
         import practice_image
@@ -293,6 +313,10 @@ class Basedesk:
         practice_image.getaccount(Baccount)
         practice_image.getlevel(level)
         IP = IMAGEPRACTICE(self.newWindow,self.master)
+    def openlearning_link(self):   
+        import webbrowser
+        url="https://cghlabm.cgmh.org.tw/course/view.php?id=884"
+        webbrowser.open(url,new=2)
     def scoresearch(self):
         import ScoreSearch
         from ScoreSearch import Search
