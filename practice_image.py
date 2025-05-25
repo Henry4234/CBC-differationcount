@@ -153,20 +153,23 @@ class IMAGEPRACTICE:
         #細胞的radio_btn矩陣
         self.radiolst =[]
         for value in self.keybordmatrix.values():
-            R1 = ctk.CTkRadioButton(
-                self.labelframe_2,
-                variable= self.ans_var,
-                value=value[2],
-                text=value[3],
-                font=('微軟正黑體',14),
-                text_color="#000000",
-                fg_color='#F55536',
-                width=180,height=25,
-                state='disabled'
-                )
-            R1.grid(row=value[0], column=value[1],padx=5,pady=4,sticky='nsew')
-            R1.grid_propagate(0)
-            self.radiolst.append(R1)
+            if value[2]==1: #skip過test_btn
+                pass
+            else:
+                R1 = ctk.CTkRadioButton(
+                    self.labelframe_2,
+                    variable= self.ans_var,
+                    value=value[2],
+                    text=value[3],
+                    font=('微軟正黑體',14),
+                    text_color="#000000",
+                    fg_color='#F55536',
+                    width=180,height=25,
+                    state='disabled'
+                    )
+                R1.grid(row=value[0], column=value[1],padx=5,pady=4,sticky='nsew')
+                R1.grid_propagate(0)
+                self.radiolst.append(R1)
         ##答案儲存dict
         self.tempt_ans={}
         for i in range(1,51):
@@ -281,7 +284,28 @@ class IMAGEPRACTICE:
                     bg_color='#000000',
                     )
         self.image.grid(row=1,column=2,rowspan=3,padx=10,pady =5,)
-    ##上面的combobox的event
+        self.image .bind("<Double-Button-1>", self.clickzoomin)
+    def clickzoomin(self,event):
+        ##考慮到後會加上"*"導致ValueError，所以用try...except
+        try:
+            no_now = int(self.combobox_no.get())
+        except ValueError:
+            no_now = int(self.combobox_no.get().rstrip("*"))
+        window_zoomin = ctk.CTkToplevel()
+        window_zoomin.title("圖片放大")
+        window_zoomin.geometry("600x600")
+        fr_zoomin = ctk.CTkFrame(window_zoomin)
+        self.zoomin_img = ctk.CTkImage(Image.open(io.BytesIO(test_dict[no_now][1])),size=(600,600))
+        self.label_zoomin = ctk.CTkLabel(  
+                    window_zoomin, 
+                    image=self.zoomin_img,
+                    text="",
+                    width=600,height=600,
+                    fg_color='#000000',
+                    bg_color='#000000',
+                    )
+        self.label_zoomin.pack()
+    
     def no_callback(self,event):
         self.master.focus_set()
         ##考慮到後會加上"*"導致ValueError，所以用try...except
@@ -416,7 +440,7 @@ class IMAGEPRACTICE:
             all_ans.append(a)
         # print(all_ans)
         #建立未填答的list
-        none_ans  = [index for (index, item) in enumerate(all_ans) if item == 0]
+        none_ans  = [index+1 for (index, item) in enumerate(all_ans) if item == 0]
         ##檢查是否有未填答的
         if len(none_ans)!=0:
             if tk.messagebox.askyesno(title='檢驗醫學部(科)', message="""尚未答題:
