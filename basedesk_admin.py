@@ -13,10 +13,12 @@ from setuptools import Command
 # global account
 # account = sys.argv[1]
 
-def get_accountpermission(acount,permission):
-    global Baccount,Permission
+def get_accountpermission(acount,permission,govid,hoscode):
+    global Baccount,Permission,Govid,Hos_code
     Permission = str(permission)
     Baccount = str(acount)
+    Govid = str(govid)
+    Hos_code = str(hoscode)
     return None
 class Basedesk_Admin:
     
@@ -35,7 +37,7 @@ class Basedesk_Admin:
         s.configure('Red.TLabelframe.Label', font=('微軟正黑體', 12))
         s.configure('Red.TLabelframe.Label', foreground ='#FFFFFF')
         s.configure('Red.TLabelframe.Label', background='#FFEEDD')
-        self.hellow_label = ctk.CTkLabel(
+        self.hello_label_user = ctk.CTkLabel(
             self.master, 
             # text = "歡迎回來",
             text = "歡迎回來 %s"%(Baccount),
@@ -44,8 +46,8 @@ class Basedesk_Admin:
             text_color="#000000",
             width=240
             )
-        self.hellow_label.pack()
-        self.label_1 = ctk.CTkLabel(
+        self.hello_label_user.pack()
+        self.hello_label_function = ctk.CTkLabel(
             self.master, 
             text = "請選擇需要使用的功能:", 
             fg_color='#FFEEDD',
@@ -53,7 +55,7 @@ class Basedesk_Admin:
             text_color="#000000",
             width=300
             )
-        self.label_1.pack()
+        self.hello_label_function.pack()
         ##框架設置
         self.labelframe_1 = ctk.CTkFrame(
             self.master,
@@ -156,7 +158,7 @@ class Basedesk_Admin:
             text_color="#000000"
             )
         self.btn_allscore.pack(padx=10, pady=15)
-        self.button_3=ctk.CTkButton(
+        self.button_import=ctk.CTkButton(
             self.labelframe_3,
             command = self.scoreimport, 
             text = "考題匯入", 
@@ -165,8 +167,8 @@ class Basedesk_Admin:
             font=('微軟正黑體',22),
             text_color="#000000"
             )
-        self.button_3.pack(padx=10, pady=15)
-        self.button_3m=ctk.CTkButton(
+        self.button_import.pack(padx=10, pady=15)
+        self.button_test_config=ctk.CTkButton(
             self.labelframe_3,
             command = self.testmodify, 
             text = "考題參數設定", 
@@ -175,8 +177,28 @@ class Basedesk_Admin:
             font=('微軟正黑體',22),
             text_color="#000000"
             )
-        self.button_3m.pack(padx=10, pady=15)
-        self.button_3s=ctk.CTkButton(
+        self.button_test_config.pack(padx=10, pady=15)
+        self.button_hos_import=ctk.CTkButton(
+            self.labelframe_3,
+            command = self.hos_scoreimport, 
+            text = "(各院區)\n考題匯入", 
+            fg_color='#FF9900',
+            width=160,height=40,
+            font=('微軟正黑體',22),
+            text_color="#000000"
+            )
+        self.button_hos_import.pack(padx=10, pady=15)
+        self.button_hos_test_config=ctk.CTkButton(
+            self.labelframe_3,
+            command = self.hos_testmodify, 
+            text = "(各院區)\n考題參數設定", 
+            fg_color='#FF9900',
+            width=160,height=40,
+            font=('微軟正黑體',22),
+            text_color="#000000"
+            )
+        self.button_hos_test_config.pack(padx=10, pady=15)
+        self.button_export=ctk.CTkButton(
             self.labelframe_2,
             command = self.output_score, 
             text = "成績匯出", 
@@ -185,8 +207,8 @@ class Basedesk_Admin:
             font=('微軟正黑體',22),
             text_color="#000000"
             )
-        self.button_3s.pack(padx=10, pady=15)
-        self.button_3t=ctk.CTkButton(
+        self.button_export.pack(padx=10, pady=15)
+        self.button_scoretest=ctk.CTkButton(
             self.labelframe_2,
             command = self.scorecal_test, 
             text = "成績試算", 
@@ -195,8 +217,8 @@ class Basedesk_Admin:
             font=('微軟正黑體',22),
             text_color="#000000"
             )
-        self.button_3t.pack(padx=10, pady=15)
-        self.button_3t=ctk.CTkButton(
+        self.button_scoretest.pack(padx=10, pady=15)
+        self.button_score=ctk.CTkButton(
             self.labelframe_2,
             command = self.scorecal, 
             text = "成績計算", 
@@ -205,7 +227,7 @@ class Basedesk_Admin:
             font=('微軟正黑體',22),
             text_color="#000000"
             )
-        self.button_3t.pack(padx=10, pady=15)
+        self.button_score.pack(padx=10, pady=15)
         self.button_4=ctk.CTkButton(
             self.labelframe_4,
             command = self.IDmanage, 
@@ -270,8 +292,8 @@ class Basedesk_Admin:
             width=80)
         self.versioninfo.pack()
     # def gui_arrang(self):
-        self.hellow_label.place(relx=0.5, rely=0.05, anchor=tk.CENTER)
-        self.label_1.place(relx=0.5, rely=0.13, anchor=tk.CENTER)
+        self.hello_label_user.place(relx=0.5, rely=0.05, anchor=tk.CENTER)
+        self.hello_label_function.place(relx=0.5, rely=0.13, anchor=tk.CENTER)
         self.button_5.place(relx=0.2,rely=0.9,anchor=tk.CENTER)
         self.button_6.place(relx=0.5,rely=0.9,anchor=tk.CENTER)
         self.button_changepw.place(relx=0.8,rely=0.9,anchor=tk.CENTER)
@@ -279,20 +301,23 @@ class Basedesk_Admin:
         self.versioninfo.place(relx=0, rely=1,anchor=tk.SW) 
         self.labelframe_1.place(relx=0.17,rely=0.395, anchor=tk.CENTER)
         self.labelframe_2.place(relx=0.52,rely=0.455, anchor=tk.CENTER)
-        self.labelframe_3.place(relx=0.85,rely=0.34, anchor=tk.CENTER)
+        self.labelframe_3.place(relx=0.85,rely=0.49, anchor=tk.CENTER)
         self.labelframe_4.place(relx=0.85,rely=0.78, anchor=tk.CENTER)
         self.labelframe_5.place(relx=0.31,rely=0.78, anchor=tk.CENTER)
         self.permission_able()
     def permission_able(self):
         if Permission=="useradmin":
-            self.button_practise.configure(state="disabled")
-            self.button_image_pracrice.configure(state="disabled")
+            self.labelframe_5.place_forget()
+            self.labelframe_4.place(relx=0.17,rely=0.78, anchor=tk.CENTER)
         elif Permission=="master":
             self.button_5.configure(state="normal")
         elif Permission=="primarysupervisor":
+            self.labelframe_4.place_forget()
             self.button_4.configure(state="disabled")
         elif Permission=="secondarysupervisor":
-            self.button_4.configure(state="disabled")
+            self.labelframe_4.place_forget()
+            self.button_import.configure(state="disabled")
+            self.button_test_config.configure(state="disabled")
             self.btn_allscore.configure(state="disabled")
 
     def changepw(self):
@@ -342,7 +367,7 @@ class Basedesk_Admin:
         from counter import Count
         self.master.withdraw() #把basedesk隱藏
         self.newWindow = ctk.CTkToplevel()
-        counter.getaccount(Baccount)
+        counter.getaccount(Baccount,Govid)
         C = Count(self.newWindow,self.master)
     def urinesedimentcounter(self):
         self.destroy()
@@ -365,7 +390,7 @@ class Basedesk_Admin:
         from counter_practise import PRACTISE
         self.master.withdraw() #把basedesk隱藏
         self.newWindow = ctk.CTkToplevel()
-        counter_practise.getaccount(Baccount)
+        counter_practise.getaccount(Baccount,Govid)
         P = PRACTISE(self.newWindow,self.master)
     def image_practise(self,level):
         import practice_image
@@ -383,15 +408,34 @@ class Basedesk_Admin:
         ScoreSearch.getaccount(Baccount)
         S = Search(self.newWindow,self.master)
     def scoreimport(self):
+        import scoreImport
         from scoreImport import Import
         self.master.withdraw() #把basedesk隱藏
         self.newWindow = ctk.CTkToplevel()
+        scoreImport.gethos('D')
         I = Import(self.newWindow,self.master)
         # self.newWindow['bg'] = "#FFEEDD"
     def testmodify(self):
+        import testmodify
         from testmodify import Modify
         self.master.withdraw() #把basedesk隱藏
         self.newWindow = ctk.CTkToplevel()
+        testmodify.gethos('D')
+        M = Modify(self.newWindow,self.master)
+    def hos_scoreimport(self):
+        import scoreImport
+        from scoreImport import Import
+        self.master.withdraw() #把basedesk隱藏
+        self.newWindow = ctk.CTkToplevel()
+        scoreImport.gethos(Hos_code)
+        I = Import(self.newWindow,self.master)
+        # self.newWindow['bg'] = "#FFEEDD"
+    def hos_testmodify(self):
+        import testmodify
+        from testmodify import Modify
+        self.master.withdraw() #把basedesk隱藏
+        self.newWindow = ctk.CTkToplevel()
+        testmodify.gethos(Hos_code)
         M = Modify(self.newWindow,self.master)
     def output_score(self):
         from output_score import OUTPUT_SCORE

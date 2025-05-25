@@ -65,13 +65,13 @@ class LMS:
     def loginuser(self):
         self.newWindow = ctk.CTk()
         # root = ctk.CTk()
-        basedesk.get_accountpermission(ac)
+        basedesk.get_accountpermission(ac,govid)
         B = basedesk.Basedesk(self.newWindow)
         self.newWindow.mainloop()
     #admin登入
     def loginuseradmin(self,permission):
         self.newWindow = ctk.CTk()
-        basedesk_admin.get_accountpermission(ac,permission)
+        basedesk_admin.get_accountpermission(ac,permission,govid,verifyAccount.hos_rematrix(self.hospital_code))
         B = basedesk_admin.Basedesk_Admin(self.newWindow)
         self.newWindow.mainloop()
 
