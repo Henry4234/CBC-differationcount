@@ -56,6 +56,11 @@ df_95.reset_index(drop=True, inplace=True)
 df_95.columns.name = None
 df_95.columns = ['n=', 'lower_100', 'upper_100', 'lower_200', 'upper_200', 'lower_500', 'upper_500', 'lower_1000', 'upper_1000', 'lower_10000', 'upper_10000']
 
+##院區代碼轉換
+with coxn.cursor() as cursor:
+    hos_matrix = "SELECT [院區],code FROM [bloodtest].[dbo].[hospital_code];"
+    cursor.execute(hos_matrix)
+    ht_code = dict(cursor.fetchall())
 
 ##外邊框設置
 #ex: A3:D5 要外粗邊框
@@ -280,6 +285,7 @@ class OUTPUT_SCORE:
         else:
             self.year_combobox.configure(state = 'normal')
             self.year_combobox.set("")
+            h_site = ht_code[h_site]    #院區轉換
             event_year = """SELECT DISTINCT [bloodinfo].[year] 
 FROM [bloodtest].[dbo].[blood_final] 
 JOIN [bloodtest].[dbo].[id] 
@@ -305,20 +311,23 @@ WHERE [id].[院區]='%s';;"""%(h_site)
         testyear = self.year_combobox.get()
         if h_site !="":
             if h_site=="All":
-                srh = """SELECT DISTINCT [id].[院區], [id].[ac],[blood_final].[smear_id],[blood_final].[count],CONVERT (varchar,[blood_final].[timestamp],100)
+                srh = """SELECT DISTINCT [hospital_code].[院區], [id].[ac],[blood_final].[smear_id],[blood_final].[count],CONVERT (varchar,[blood_final].[timestamp],100)
                 FROM [bloodtest].[dbo].[blood_final] 
                 JOIN [bloodtest].[dbo].[id] 
-                ON [id].[No] = [blood_final].[test_id];"""
+                ON [id].[No] = [blood_final].[test_id]
+                JOIN [bloodtest].[dbo].[hospital_code] ON [hospital_code].[code] = [id].[院區];"""
                 self.btn_export.configure(state='normal')
                 self.btn_rawexport.configure(state='normal')
                 self.btn_sasexport.configure(state='normal')
             elif testyear !="":
-                srh = """SELECT DISTINCT [id].[院區], [id].[ac],[blood_final].[smear_id],[blood_final].[count],CONVERT (varchar,[blood_final].[timestamp],100)
+                h_site = ht_code[h_site]    #院區轉換
+                srh = """SELECT DISTINCT [hospital_code].[院區], [id].[ac],[blood_final].[smear_id],[blood_final].[count],CONVERT (varchar,[blood_final].[timestamp],100)
                     FROM [bloodtest].[dbo].[blood_final] 
                     JOIN [bloodtest].[dbo].[id] 
                     ON [id].[No] = [blood_final].[test_id]
                     JOIN [bloodtest].[dbo].[bloodinfo] 
                     ON [bloodinfo].[smear_id] = [blood_final].[smear_id]
+                    JOIN [bloodtest].[dbo].[hospital_code] ON [hospital_code].[code] = [id].[院區]
                     WHERE [id].[院區] = '%s' AND [bloodinfo].[year] = %d ;"""%(h_site,int(testyear))
                 self.btn_export.configure(state='normal')
                 self.btn_rawexport.configure(state='normal')
@@ -338,6 +347,9 @@ WHERE [id].[院區]='%s';;"""%(h_site)
 #########################################↑↑↑↑↑搜尋: 查看當前所選擇的院區以及年分↑↑↑↑↑#########################################
 #########################################↓↓↓↓↓匯出考試結果: 包含考片正確答案，↓↓↓↓↓#########################################
     def output_testresult(self):
+        savefolder = filedialog.askdirectory(title="選擇匯出資料夾")
+        if savefolder == "":
+            return
         h_site = self.all_combobox.get()
         testyear = self.year_combobox.get()
         if h_site !="":
@@ -347,18 +359,20 @@ FROM [bloodtest].[dbo].[bloodinfo_ans2]
 WHERE [bloodinfo_ans2].[smear_id] IN (
 	SELECT DISTINCT [blood_final].[smear_id] FROM [bloodtest].[dbo].[blood_final]
 	);"""
-                get_data_matrix = """SELECT [id].[院區],[id].[ac],[bloodinfo].[year],[blood_final].[smear_id],[blood_final].[count],[blood_final].[celltype],[blood_final].[matrix_value],[blood_final].[timestamp]
+                get_data_matrix = """SELECT [hospital_code].[院區],[id].[ac],[bloodinfo].[year],[blood_final].[smear_id],[blood_final].[count],[blood_final].[celltype],[blood_final].[matrix_value],[blood_final].[timestamp]
 FROM [bloodtest].[dbo].[blood_final]
 JOIN [bloodtest].[dbo].[id] ON [id].[No] = [blood_final].[test_id]
-JOIN [bloodtest].[dbo].[bloodinfo] ON [bloodinfo].[smear_id] = [blood_final].[smear_id];"""
-                get_final = """SELECT DISTINCT [id].[院區],[id].[ac],[bloodinfo].[year],[blood_final].[smear_id],[blood_final].[count],[test_data].[must],[test_data].[mustnot],[test_data].[abn_lym],[test_data].[score]
+JOIN [bloodtest].[dbo].[bloodinfo] ON [bloodinfo].[smear_id] = [blood_final].[smear_id]
+JOIN [bloodtest].[dbo].[hospital_code] ON [hospital_code].[code] = [id].[院區];"""
+                get_final = """SELECT DISTINCT [hospital_code].[院區],[id].[ac],[bloodinfo].[year],[blood_final].[smear_id],[blood_final].[count],[test_data].[must],[test_data].[mustnot],[test_data].[abn_lym],[test_data].[score]
 FROM [blood_final]
 JOIN [test_data] 
 ON [test_data].[test_id]=[blood_final].[test_id] 
 AND [test_data].[smear_id]=[blood_final].[smear_id] 
 AND [test_data].[count]=[blood_final].[count]
 JOIN [bloodtest].[dbo].[id] ON [id].[No] = [test_data].[test_id]
-JOIN [bloodtest].[dbo].[bloodinfo] ON [bloodinfo].[smear_id] = [test_data].[smear_id];"""
+JOIN [bloodtest].[dbo].[bloodinfo] ON [bloodinfo].[smear_id] = [test_data].[smear_id]
+JOIN [bloodtest].[dbo].[hospital_code] ON [hospital_code].[code] = [id].[院區];"""
                 file_name = "All_"
             elif testyear !="":
                 get_ans_bool = """SELECT [bloodinfo_ans2].[smear_id],[bloodinfo_ans2].[celltype],[bloodinfo_ans2].[must],[bloodinfo_ans2].[mustnot]
@@ -369,12 +383,12 @@ WHERE [bloodinfo_ans2].[smear_id] IN (
 	FROM [bloodtest].[dbo].[blood_final]
 	JOIN [bloodtest].[dbo].[id] ON [id].[No] = [blood_final].[test_id]
 	WHERE [id].[院區] = '%s')
-AND [bloodinfo].[year]=%d"""%(h_site,int(testyear))
+AND [bloodinfo].[year]=%d;"""%(ht_code[h_site],int(testyear))
                 get_data_matrix = """SELECT [id].[院區],[id].[ac],[bloodinfo].[year],[blood_final].[smear_id],[blood_final].[count],[blood_final].[celltype],[blood_final].[matrix_value],[blood_final].[timestamp]
 FROM [bloodtest].[dbo].[blood_final]
 JOIN [bloodtest].[dbo].[id] ON [id].[No] = [blood_final].[test_id]
 JOIN [bloodtest].[dbo].[bloodinfo] ON [bloodinfo].[smear_id] = [blood_final].[smear_id]
-WHERE [id].[院區] = '%s' AND [bloodinfo].[year]=%d;"""%(h_site,int(testyear))
+WHERE [id].[院區] = '%s' AND [bloodinfo].[year]=%d;"""%(ht_code[h_site],int(testyear))
                 get_final = """SELECT DISTINCT [id].[院區],[id].[ac],[bloodinfo].[year],[blood_final].[smear_id],[blood_final].[count],[test_data].[must],[test_data].[mustnot],[test_data].[abn_lym],[test_data].[score]
 FROM [blood_final]
 JOIN [test_data] 
@@ -383,7 +397,7 @@ AND [test_data].[smear_id]=[blood_final].[smear_id]
 AND [test_data].[count]=[blood_final].[count]
 JOIN [bloodtest].[dbo].[id] ON [id].[No] = [test_data].[test_id]
 JOIN [bloodtest].[dbo].[bloodinfo] ON [bloodinfo].[smear_id] = [test_data].[smear_id]
-WHERE [id].[院區]='%s' AND [bloodinfo].[year]=%d;"""%(h_site,int(testyear))
+WHERE [id].[院區]='%s' AND [bloodinfo].[year]=%d;"""%(ht_code[h_site],int(testyear))
                 file_name = "%d_%s_"%(int(testyear),h_site)
             else:
                 tk.messagebox.showerror(title='檢驗醫學部(科)', message='請選擇年份!')
@@ -488,8 +502,8 @@ WHERE [id].[院區]='%s' AND [bloodinfo].[year]=%d;"""%(h_site,int(testyear))
         outter_border(ws,"A", len(lst)*2 + 6 + len(matrix_data), "I" , len(lst)*2 + 6 + len(matrix_data)+len(final_data),"medium")
 
 
-        wb.save(file_name + "考生結果.xlsx")
-        filepath = ".//%s考生結果.xlsx"%(file_name)
+        wb.save(str(savefolder) +"/"+ file_name + "考生結果.xlsx")
+        filepath = str(savefolder) + "/%s考生結果.xlsx"%(file_name)
         if os.path.isfile(filepath):
             tk.messagebox.showinfo(title='檢驗醫學部(科)', message='檔案新增成功!')
         else:
@@ -499,16 +513,20 @@ WHERE [id].[院區]='%s' AND [bloodinfo].[year]=%d;"""%(h_site,int(testyear))
     def output_percent(self):
         h_site = self.all_combobox.get()
         testyear = self.year_combobox.get()
+        savefolder = filedialog.askdirectory(title="選擇匯出資料夾")
+        if savefolder == "":
+          return
         if h_site !="":
             if h_site=="All":
                 get_ans = """SELECT [bloodinfo_ans2].[smear_id],[bloodinfo].[count_value],[bloodinfo_ans2].[celltype],[bloodinfo_ans2].[value]
 FROM [bloodtest].[dbo].[bloodinfo_ans2]
 JOIN [bloodtest].[dbo].[bloodinfo] ON [bloodinfo].[smear_id] = [bloodinfo_ans2].[smear_id]
 WHERE [bloodinfo_ans2].[smear_id] IN (SELECT DISTINCT [blood_final].[smear_id] FROM [bloodtest].[dbo].[blood_final]);"""
-                get_data = """SELECT [id].[院區],[id].[ac],[bloodinfo].[year],[blood_final].[smear_id],[blood_final].[count],[blood_final].[celltype],[blood_final].[percent_value],[blood_final].[timestamp]
+                get_data = """SELECT [hospital_code].[院區],[id].[ac],[bloodinfo].[year],[blood_final].[smear_id],[blood_final].[count],[blood_final].[celltype],[blood_final].[percent_value],[blood_final].[timestamp]
 FROM [bloodtest].[dbo].[blood_final]
 JOIN [bloodtest].[dbo].[id] ON [id].[No] = [blood_final].[test_id]
-JOIN [bloodtest].[dbo].[bloodinfo] ON [bloodinfo].[smear_id] = [blood_final].[smear_id];"""
+JOIN [bloodtest].[dbo].[bloodinfo] ON [bloodinfo].[smear_id] = [blood_final].[smear_id]
+JOIN [bloodtest].[dbo].[hospital_code] ON [hospital_code].[code] = [id].[院區];"""
                 file_name = "All_"
             elif testyear !="":
                 get_ans = """SELECT [bloodinfo_ans2].[smear_id],[bloodinfo].[count_value],[bloodinfo_ans2].[celltype],[bloodinfo_ans2].[value]
@@ -519,12 +537,13 @@ WHERE [bloodinfo_ans2].[smear_id] IN (
 	FROM [bloodtest].[dbo].[blood_final]
 	JOIN [bloodtest].[dbo].[id] ON [id].[No] = [blood_final].[test_id]
 	WHERE [id].[院區] = '%s')
-AND [bloodinfo].[year]=%d;"""%(h_site,int(testyear))
-                get_data = """SELECT [id].[院區],[id].[ac],[bloodinfo].[year],[blood_final].[smear_id],[blood_final].[count],[blood_final].[celltype],[blood_final].[percent_value],[blood_final].[timestamp]
+AND [bloodinfo].[year]=%d;"""%(ht_code[h_site],int(testyear))
+                get_data = """SELECT [hospital_code].[院區],[id].[ac],[bloodinfo].[year],[blood_final].[smear_id],[blood_final].[count],[blood_final].[celltype],[blood_final].[percent_value],[blood_final].[timestamp]
 FROM [bloodtest].[dbo].[blood_final]
 JOIN [bloodtest].[dbo].[id] ON [id].[No] = [blood_final].[test_id]
 JOIN [bloodtest].[dbo].[bloodinfo] ON [bloodinfo].[smear_id] = [blood_final].[smear_id]
-WHERE [id].[院區] = '%s' AND [bloodinfo].[year]=%d;"""%(h_site,int(testyear))
+JOIN [bloodtest].[dbo].[hospital_code] ON [hospital_code].[code] = [id].[院區]
+WHERE [id].[院區] = '%s' AND [bloodinfo].[year]=%d;"""%(ht_code[h_site],int(testyear))
                 file_name = "%d_%s_"%(int(testyear),h_site)
             else:
                 tk.messagebox.showerror(title='檢驗醫學部(科)', message='請選擇年份!')
@@ -601,8 +620,9 @@ WHERE [id].[院區] = '%s' AND [bloodinfo].[year]=%d;"""%(h_site,int(testyear))
         ###table_2
         outter_border(ws,"A", len(lst) + 4, "J" , len(lst) + 4 + len(data),"medium")
 
-        wb.save(file_name + "考生原始成績.xlsx")
-        filepath = ".//%s考生原始成績.xlsx"%(file_name)
+        wb.save(str(savefolder) +"/"+ file_name + "考生原始成績.xlsx")
+        filepath = str(savefolder + "/%s考生原始成績.xlsx"%(file_name))
+
         if os.path.isfile(filepath):
             tk.messagebox.showinfo(title='檢驗醫學部(科)', message='檔案新增成功!')
         else:
@@ -612,23 +632,12 @@ WHERE [id].[院區] = '%s' AND [bloodinfo].[year]=%d;"""%(h_site,int(testyear))
     def output_sas(self):
         h_site = self.all_combobox.get()
         testyear = self.year_combobox.get()
+        savefolder = filedialog.askdirectory(title="選擇匯出資料夾")
+        if savefolder == "":
+            return
         if h_site !="":
             if h_site=="All":
-                get_sas = """SELECT [id].[院區],[id].[ac],[bloodinfo].[year],[blood_final].[smear_id],[blood_final].[count],[blood_final].[celltype],
-[blood_final].[percent_value],[bloodinfo_ans2].[value],
-[blood_final].[matrix_value],[test_data].[must],[test_data].[mustnot],[test_data].[abn_lym],[test_data].[score],
-[blood_final].[timestamp]
-FROM [blood_final]
-JOIN [test_data] 
-ON [test_data].[test_id]=[blood_final].[test_id] 
-AND [test_data].[smear_id]=[blood_final].[smear_id] 
-AND [test_data].[count]=[blood_final].[count]
-JOIN [bloodtest].[dbo].[id] ON [id].[No] = [test_data].[test_id]
-JOIN [bloodtest].[dbo].[bloodinfo] ON [bloodinfo].[smear_id] = [test_data].[smear_id]
-JOIN [bloodtest].[dbo].[bloodinfo_ans2] ON [bloodinfo_ans2].[smear_id] = [test_data].[smear_id] AND [bloodinfo_ans2].[celltype] = [blood_final].[celltype];"""
-                file_name = "All_"
-            elif testyear !="":
-                get_sas = """SELECT [id].[院區],[id].[ac],[bloodinfo].[year],[blood_final].[smear_id],[blood_final].[count],[blood_final].[celltype],
+                get_sas = """SELECT [hospital_code].[院區],[id].[ac],[bloodinfo].[year],[blood_final].[smear_id],[blood_final].[count],[blood_final].[celltype],
 [blood_final].[percent_value],[bloodinfo_ans2].[value],
 [blood_final].[matrix_value],[test_data].[must],[test_data].[mustnot],[test_data].[abn_lym],[test_data].[score],
 [blood_final].[timestamp]
@@ -640,7 +649,23 @@ AND [test_data].[count]=[blood_final].[count]
 JOIN [bloodtest].[dbo].[id] ON [id].[No] = [test_data].[test_id]
 JOIN [bloodtest].[dbo].[bloodinfo] ON [bloodinfo].[smear_id] = [test_data].[smear_id]
 JOIN [bloodtest].[dbo].[bloodinfo_ans2] ON [bloodinfo_ans2].[smear_id] = [test_data].[smear_id] AND [bloodinfo_ans2].[celltype] = [blood_final].[celltype]
-WHERE [id].[院區]='%s' AND [bloodinfo].[year]=%d;"""%(h_site,int(testyear))
+JOIN [bloodtest].[dbo].[hospital_code] ON [hospital_code].[code] = [id].[院區];"""
+                file_name = "All_"
+            elif testyear !="":
+                get_sas = """SELECT [hospital_code].[院區],[id].[ac],[bloodinfo].[year],[blood_final].[smear_id],[blood_final].[count],[blood_final].[celltype],
+[blood_final].[percent_value],[bloodinfo_ans2].[value],
+[blood_final].[matrix_value],[test_data].[must],[test_data].[mustnot],[test_data].[abn_lym],[test_data].[score],
+[blood_final].[timestamp]
+FROM [blood_final]
+JOIN [test_data] 
+ON [test_data].[test_id]=[blood_final].[test_id] 
+AND [test_data].[smear_id]=[blood_final].[smear_id] 
+AND [test_data].[count]=[blood_final].[count]
+JOIN [bloodtest].[dbo].[id] ON [id].[No] = [test_data].[test_id]
+JOIN [bloodtest].[dbo].[bloodinfo] ON [bloodinfo].[smear_id] = [test_data].[smear_id]
+JOIN [bloodtest].[dbo].[bloodinfo_ans2] ON [bloodinfo_ans2].[smear_id] = [test_data].[smear_id] AND [bloodinfo_ans2].[celltype] = [blood_final].[celltype]
+JOIN [bloodtest].[dbo].[hospital_code] ON [hospital_code].[code] = [id].[院區]
+WHERE [id].[院區]='%s' AND [bloodinfo].[year]=%d;"""%(ht_code[h_site],int(testyear))
                 file_name = "%d_%s_"%(int(testyear),h_site)
             else:
                 tk.messagebox.showerror(title='檢驗醫學部(科)', message='請選擇年份!')
@@ -683,8 +708,8 @@ WHERE [id].[院區]='%s' AND [bloodinfo].[year]=%d;"""%(h_site,int(testyear))
                 ws["I" + str(j)].value = cri_low
                 ws["J" + str(j)].value = cri_high
                 # print(cell_per)
-        wb.save(file_name + "SAS.xlsx")
-        filepath = ".//%sSAS.xlsx"%(file_name)
+        wb.save(str(savefolder) +"/"+ file_name + "SAS.xlsx")
+        filepath = str(savefolder + "/%sSAS.xlsx"%(file_name))
         if os.path.isfile(filepath):
             tk.messagebox.showinfo(title='檢驗醫學部(科)', message='檔案新增成功!')
         else:
