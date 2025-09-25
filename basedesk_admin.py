@@ -29,7 +29,7 @@ class Basedesk_Admin:
         # self.root = ctk.CTk()
         ctk.set_default_color_theme("dark-blue")  
         # 給主視窗設定標題內容  
-        self.master.title("形態學考核及教育程式-v5.3")  
+        self.master.title("形態學考核及教育程式-v5.4")  
         self.master.geometry('650x600')
         self.master.config(background='#FFEEDD') #設定背景色
         # global account_1
@@ -156,7 +156,7 @@ class Basedesk_Admin:
         # self.button_2.pack(padx=10, pady=15)
         self.btn_allscore=ctk.CTkButton(
             self.labelframe_2, 
-            command = None, 
+            command = self.opensas_link, 
             text = "全體成績查詢",
             fg_color='#FF9900', 
             width=160,height=40,
@@ -303,7 +303,7 @@ class Basedesk_Admin:
             self.master, 
             fg_color="#FFEEDD",
             bg_color='#FFEEDD',
-            text='@version -5.3',
+            text='@version -5.4',
             text_color="#000000",
             font=("Calibri",12),
             width=80)
@@ -478,6 +478,10 @@ class Basedesk_Admin:
     def openlearning_link(self):   
         import webbrowser
         url="https://cghlabm.cgmh.org.tw/course/view.php?id=884"
+        webbrowser.open(url,new=2)
+    def opensas_link(self):
+        import webbrowser
+        url="https://cghsasva2.cgmh.org.tw/SASVisualAnalytics/"
         webbrowser.open(url,new=2)
     def logout_interface(self,oldmaster):
         if tk.messagebox.askyesno(title='檢驗醫學部(科)', message='確定要登出嗎?', ):
