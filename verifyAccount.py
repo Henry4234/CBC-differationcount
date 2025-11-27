@@ -4,7 +4,6 @@ import sqlalchemy as sa
 
 import bcrypt
 import json
-import pymysql
 ##bcrypt pw
 
 import pyodbc

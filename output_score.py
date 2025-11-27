@@ -119,6 +119,11 @@ class OUTPUT_SCORE:
         self.master.config(background='#FFEEDD')
         self.master.grid_rowconfigure(0, weight=1)
         self.master.grid_columnconfigure(1, weight=2)
+        #取得院區
+        with coxn.cursor() as cursor:
+            cursor.execute("SELECT [院區] FROM [bloodtest].[dbo].[hospital_code];")
+            self.hospital = [str(row[0]) for row in cursor.fetchall()]
+        self.hospital = ["","All"] + self.hospital
         #框架設計
         self.labelframe_1 = ctk.CTkFrame(self.master,corner_radius=0,fg_color="#FFDCB9",bg_color="#FFEEDD")
         self.labelframe_1.grid(row=0, column=0, rowspan=2,sticky='nsew')
@@ -142,7 +147,7 @@ class OUTPUT_SCORE:
                     command=self.callback_all,
                     fg_color='#FFDCB9',
                     button_color='#FF9900',
-                    values=["","All","台北","基隆","林口","桃園","雲林","嘉義","高雄","土城","大里仁愛"],
+                    values=self.hospital,
                     font=('微軟正黑體',22),
                     text_color="#000000",
                     width=120,height=50
@@ -292,7 +297,7 @@ JOIN [bloodtest].[dbo].[id]
 ON [id].[No] = [blood_final].[test_id]
 JOIN [bloodtest].[dbo].[bloodinfo] 
 ON [bloodinfo].[smear_id] = [blood_final].[smear_id]
-WHERE [id].[院區]='%s';;"""%(h_site)
+WHERE [id].[院區]='%s';"""%(h_site)
             with coxn.cursor() as cursor:
                 cursor.execute(event_year)
                 un_year = cursor.fetchall()
