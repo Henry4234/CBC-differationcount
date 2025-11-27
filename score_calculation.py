@@ -71,6 +71,10 @@ class SCORE_CAL:
         self.labelframe_2 = ctk.CTkFrame(self.master,fg_color="#FFEEDD",bg_color="#FFEEDD")
         self.labelframe_2.grid(row=0, column=1)
         self.testicon = ctk.CTkImage(Image.open(resource_path("assets\pages.png")),size=(120,120))
+        with coxn.cursor() as cursor:
+            cursor.execute("SELECT [院區] FROM [bloodtest].[dbo].[hospital_code];")
+            self.hospital = [str(row[0]) for row in cursor.fetchall()]
+        self.hospital = ["","All"] + self.hospital
         #引入henry計算Range
         filename = resource_path("./chart/rangechart.json")
         self.rangechart = pd.read_json(filename)
@@ -95,7 +99,7 @@ class SCORE_CAL:
                     command=self.callback_all,
                     fg_color='#FFDCB9',
                     button_color='#FF9900',
-                    values=["","All","台北","基隆","林口","桃園","雲林","嘉義","高雄","土城","大里仁愛"],
+                    values=self.hospital,
                     font=('微軟正黑體',22),
                     text_color="#000000",
                     width=120,height=50
@@ -379,6 +383,8 @@ WHERE [smear_id] ='%s';"""%(self.row_data[2])
             merge =[(x[0], x[1], x[2], x[3], y) for x, y in zip(self.data_sht_2, self.cal_percent)]
             # print(merge)
             #放入tksheets_2中
+            self.sht_ans.dehighlight_all()
+            self.sht_ans.headers(["細胞","答案數值","must_chk","mustnot_chk","考生DATA"])
             self.sht_ans.set_sheet_data(merge,reset_col_positions=True,reset_row_positions=True)
             #更改備註
             self.input_testcomment.configure(state='normal')
@@ -393,6 +399,59 @@ WHERE [smear_id] ='%s';"""%(self.row_data[2])
 #####↓↓↓↓↓##################計算成績: 餵進去計算成績##################↓↓↓↓↓#####
     def calculate_cell(self):
         must_chk,mustnot_chk,ablym_chk,final_score = self.calculate(ans_tuple=self.data_sht_2,entry_lst=self.cal_percent,data_count_val=self.data_count_val)
+        #重新放入tksheets_2中
+        self.data_sht_2_lst = [list(element) for element in self.data_sht_2]    #原先的data_sht_2為tuple結構，不可以append，所以轉換為list
+        for cellname in self.data_sht_2_lst:    #利用建立好的ansrangedict去查表，把range加進
+            lowrange = self.ansrangedict[cellname[0]][1]
+            uprange = self.ansrangedict[cellname[0]][2]
+            cellname.append(lowrange)
+            cellname.append(uprange)
+        # print(self.data_sht_2_lst)
+        merge = [(x[0], x[1], x[4], x[5], y,  x[2], x[3]) for x, y in zip(self.data_sht_2_lst, self.cal_percent)]
+        self.sht_ans.set_sheet_data(merge,reset_col_positions=True,reset_row_positions=True)
+        self.sht_ans.headers(["細胞","答案數值","上限","下限","考生DATA","must_chk","mustnot_chk"],redraw = True)
+        
+        #加入bg顏色輔助判讀(range)
+        for ansno in range(0,len(self.chkrange)):
+            if self.chkrange[ansno] != 1:
+                #看是偏大還是偏小
+                if self.data_sht_2_lst[ansno][1] > self.cal_percent[ansno]:
+                    self.sht_ans.highlight_cells(row = ansno, column = 4,bg = '#92D050')
+                else:
+                    self.sht_ans.highlight_cells(row = ansno, column = 4,bg = '#FFCC99')
+            else:
+                pass
+        #加入bg顏色輔助判讀(must & mustnot & ablym_chk)
+        if must_chk =="" or must_chk ==True:
+            pass
+        else:
+            #先把must的位置叫出來
+            must_loc = [musttrue[2] for musttrue in self.data_sht_2_lst]
+            must_loc = [index for index, value in enumerate(must_loc) if value]
+            #再一一比對must是否符合
+            for loc in must_loc:
+                if self.data_sht_2_lst[loc][5] > self.cal_percent[loc]:
+                    self.sht_ans.highlight_cells(row = loc, column = 4,bg = '#FF2D2D')
+                else:
+                    pass
+        if mustnot_chk =="" or mustnot_chk ==True:
+            pass
+        else:
+            #先把mustnot的位置叫出來           
+            mustnot_loc = [mustnottrue[3] for mustnottrue in self.data_sht_2_lst]
+            mustnot_loc = [index for index, value in enumerate(mustnot_loc) if value]
+            #再一一比對mustnot是否符合
+            for loc in mustnot_loc:
+                if self.cal_percent[loc] > 0:
+                    self.sht_ans.highlight_cells(row = loc, column = 4,bg = '#FF2D2D')
+                else:
+                    pass
+        if ablym_chk =="" or ablym_chk ==True:
+            pass
+        else:
+            self.sht_ans.highlight_cells(row = 0, column = 4,bg = '#FF2D2D')
+            self.sht_ans.highlight_cells(row = 1, column = 4,bg = '#FF2D2D')
+
         tk.messagebox.showinfo(title='檢驗醫學部(科)', message="""已完成計算!
 (空白表示不需檢查)
 必須打到細胞檢查: %s
@@ -415,7 +474,6 @@ plasmacell+abn-Lym:%s
         # print(self.must_chk,self.mustnot_chk,self.ablym_chk)
         #加入tksheets
         # print(self.chkrange)
-        # self.sht_ans.set_sheet_data(self.chkrange,reset_col_positions=True,reset_row_positions=True)
         #加入combobox_
         self.combobox_tscore.set(final_score)
 #####↑↑↑↑↑##################計算成績: 餵進去計算成績##################↑↑↑↑↑#####
@@ -426,10 +484,12 @@ plasmacell+abn-Lym:%s
         entrylst = entry_lst
         self.mustlst=[item[2] for item in ans_tuple]
         self.mustnotlst=[item[3] for item in ans_tuple]
+        self.ansrangedict={item[0]:[item[1]] for item in ans_tuple}
         # print(anslst)
         # print(entrylst)
         # print(self.mustlst)        
         # print(self.mustnotlst)
+        # print(self.ansrangedict)
         #收細胞 
         mtl,mnl=[],[]
         for k in range(0,len(self.mustlst)):
@@ -459,6 +519,14 @@ plasmacell+abn-Lym:%s
         colname_1 = "%s_lower"%(str(ncount))
         colname_2 = "%s_upper"%(str(ncount))
         db = self.rangechart[[colname_1,colname_2]]
+        #將解答的range填入self.ansrangedict
+        for ansamount in self.ansrangedict.values():
+            num = round(ansamount[0])
+            tt = db.iloc[num]
+            lower = tt[colname_1]
+            upper = tt[colname_2]
+            ansamount.append(lower)
+            ansamount.append(upper)
         #18個細胞的matrix
         self.chkrange = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
         #3個chk
@@ -704,7 +772,7 @@ AND [test_data].[count] = %d;"""%(final_score,self.must_chk,self.mustnot_chk,sel
                     cursor.execute(upload_final_2)
                 coxn.commit()
             tk.messagebox.showinfo(title='檢驗醫學部(科)', message="已完成上傳!")
-            self.clear()
+            self.upload_clear()
             return
         else:
             pass
@@ -723,6 +791,19 @@ AND [test_data].[count] = %d;"""%(final_score,self.must_chk,self.mustnot_chk,sel
         self.input_testcomment.configure(state='disable')
         ##清除總分combobox
         self.combobox_tscore.set("")
+##清除上傳後reload
+    def upload_clear(self):
+        ##清除兩個tksheets
+        self.sht_result.set_sheet_data()
+        self.sht_ans.set_sheet_data()
+        ##清除一個備註內容
+        self.input_testcomment.configure(state='normal')
+        self.input_testcomment.delete("0.0",ctk.END)
+        self.input_testcomment.configure(state='disable')
+        ##清除總分combobox
+        self.combobox_tscore.set("")
+        ##讓clear重新用搜尋reload一次資料
+        self.search_gai()
 ##返回basdesk按鈕    
     def back(self,oldmaster):
         try:

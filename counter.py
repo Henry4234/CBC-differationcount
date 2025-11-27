@@ -883,25 +883,20 @@ class Count:    #建立計數器
             winsound.Beep(freq, duration)
             self.input_totalcount.configure(text_color='#3399CC')
         #檢查是否有小於0的細胞
-        # idiv_cell=[]
-        idiv_cell2=[]
-        # for h in cell.values():
-        #     idiv_cell.append(h.get())
-        # print(idiv_cell)
+        idiv_cell=[]
         for key in self.keybordmatrix:
             kk = self.keybordmatrix[key][4]
-            idiv_cell2.append(kk.get())
-        # print(idiv_cell2)
-        result = all(ele >= 0 for ele in idiv_cell2)
+            idiv_cell.append(kk.get())
+        result = all(ele >= 0 for ele in idiv_cell)
         # print(result)
+        x = self.keybordmatrix[str.upper(event.char)][4].get()
         if str.upper(event.char)=="I":
             self.switch.toggle()
-        else:
-            x = self.keybordmatrix[str.upper(event.char)][4].get()
+            return
         if self.switch_var.get() == "off":
             return self.add_count(event)
         else: 
-            if x ==0 or self.totalcount.get() <=0 or result == False:
+            if x == 0 or self.totalcount.get() <=0 or result == False:
                 tk.messagebox.showerror(title='總數問題', message='細胞已歸0!請切換至上數模式!')
             else:
                 return self.minus_count(event)
@@ -963,7 +958,7 @@ class Count:    #建立計數器
                 self.keybordmatrix[key][5].set(per_tal)
 
     #上下數switch
-    def updown(self,event):
+    def updown(self):
         mode =self.switch_var.get()
         if mode =="off":
             mode =="on"
