@@ -15,7 +15,8 @@ login GUI
 
 # 2-1. 功能介面(管理員)
 
-![螢幕擷取畫面 2024-03-26 092247](https://github.com/Henry4234/CBC-differationcount/assets/102476562/ea9712a8-5cbd-44de-84ca-7cfac29508f4)
+<img width="652" height="689" alt="螢幕擷取畫面 2026-05-15 200836" src="https://github.com/user-attachments/assets/e0f86f4e-1524-499f-aaf9-446665251095" />
+
 
 v2.1 版本新增功能
 
