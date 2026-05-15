@@ -41,7 +41,8 @@ base desk GUI (admin)
     1. 新增修改帳號
 `basedesk_admin.getaccount(account)`函式可以擷取登入帳號，顯示在歡迎回來後方，也利後續存取db
 # 2-2. 功能介面(user)
-![螢幕擷取畫面 2022-12-13 175317](https://user-images.githubusercontent.com/102476562/221457361-198da60c-def7-4cbd-8cfb-5100df971a85.png)
+<img width="802" height="682" alt="螢幕擷取畫面 2026-05-15 202505" src="https://github.com/user-attachments/assets/c5da8077-a787-44ff-9db6-9ca62fd6fa7a" />
+
 
 base desk GUI
 1. 考核介面
