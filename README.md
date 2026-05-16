@@ -176,8 +176,9 @@ ScoreSearch GUI
 增加游標事件(`mplcursors`)，可以在指標指到該點時，顯示相關資訊
 (e.g.成績上傳時間/分數)
 ## 3-2.b. 全體成績查詢介面
-更新中...
-## 3-3.a. 考題匯入介面
+
+連結至[SAS](https://cghsasva2.cgmh.org.tw/SASVisualAnalytics/)## 3-3.a. 考題匯入介面
+
 ![螢幕擷取畫面 2022-12-29 221417](https://user-images.githubusercontent.com/102476562/221458789-d37c9241-0152-4305-bb16-b028967f237b.png)
 
 scoreImport GUI
