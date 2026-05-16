@@ -76,7 +76,7 @@ login GUI
 
 ## 1. LMS登入介面(LMS_main.py入口)
 
-<img width="865" height="216" alt="image" src="https://github.com/user-attachments/assets/0941bea6-ffd3-4c54-8aac-2654a154b70b" />
+<img width="865" height="216" alt="593608812-0941bea6-ffd3-4c54-8aac-2654a154b70b" src="https://github.com/user-attachments/assets/c51b1141-c30a-49d4-8466-bae75e79e522" />
 
  - 直接進入LMS中點擊`形態學考核及教育程式`
  - 或於terminal中輸入以下資訊: ```python V account IDpw```
@@ -253,7 +253,7 @@ testmodify GUI
 
 output_score GUI
 
-<img width="1202" height="682" alt="螢幕擷取畫面 2024-11-27 032237" src="https://github.com/user-attachments/assets/1d5dd739-c140-4e41-b87d-bab6dc11a9af" />
+<img width="1202" height="682" alt="螢幕擷取畫面 2024-11-27 032237" src="https://github.com/user-attachments/assets/ed436daf-e118-4851-b6d2-11a0a1f96e1e" />
 
 
 ### 功能介紹
