@@ -15,7 +15,7 @@ import sqlalchemy as sa
 
 import pyodbc
 #建立與mySQL連線資料
-connection_string = """DRIVER={ODBC Driver 17 for SQL Server};SERVER=220.133.50.28;DATABASE=bloodtest;UID=cgmh;PWD=B[-!wYJ(E_i7Aj3r"""
+connection_string = """DRIVER={ODBC Driver 17 for SQL Server};SERVER=127.0.0.1;DATABASE=bloodtest;UID=admin;PWD=foolname1234"""
 try:
     coxn = pyodbc.connect(connection_string)
 except pyodbc.InterfaceError:

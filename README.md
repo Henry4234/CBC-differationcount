@@ -67,7 +67,7 @@ CBC-differationcount/  (LMS — 血液抹片鏡檢考試系統)
     - `.\urvenvname\Scripts\activate.ps1` 進入venv
     - `pip install -r requirements.txt ` 安裝package
 
-## 1. 登入介面 <code style="color : red">(V3.1後已廢除，修改為LMS_main.py入口)</font>
+## 1. 登入介面 <font color=#FF0000>(V3.1後已廢除，修改為LMS_main.py入口)</font>
 ![螢幕擷取畫面 2022-12-03 154438](https://user-images.githubusercontent.com/102476562/221456935-3b566723-6ad1-46a7-ba02-b01485901e61.png)
 
 login GUI

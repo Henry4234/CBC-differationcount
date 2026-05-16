@@ -12,7 +12,7 @@ connection_string = """DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;D
 try:
     coxn = pyodbc.connect(connection_string)
 except pyodbc.OperationalError:
-    connection_string = "DRIVER={ODBC Driver 17 for SQL Server};SERVER=10.30.47.9;DATABASE=bloodtest;UID=henry423;PWD=1234"
+    connection_string = """DRIVER={ODBC Driver 17 for SQL Server};SERVER=127.0.0.1;DATABASE=bloodtest;UID=admin;PWD=foolname1234"""
 finally:
     coxn = pyodbc.connect(connection_string)
 connection_url = URL.create("mssql+pyodbc", query={"odbc_connect": connection_string})
